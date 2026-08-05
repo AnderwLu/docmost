@@ -18,6 +18,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { User, Workspace } from '@docmost/db/types/entity.types';
 import { OnlyOfficeService } from './onlyoffice.service';
 import { OnlyOfficeCallbackBody } from './onlyoffice.types';
+import { SkipTransform } from '../../common/decorators/skip-transform.decorator';
 
 @Controller('office')
 export class OnlyOfficeController {
@@ -53,6 +54,8 @@ export class OnlyOfficeController {
 
   @Post('callback/:token')
   @HttpCode(HttpStatus.OK)
+  // OEM 协议兼容点：ONLYOFFICE 要求响应严格为顶层 { error: number }，不能套 Docmost data 外壳。
+  @SkipTransform()
   async callback(
     @Param('token') token: string,
     @Body() body: OnlyOfficeCallbackBody,
