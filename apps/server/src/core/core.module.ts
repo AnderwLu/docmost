@@ -23,6 +23,7 @@ import { WatcherModule } from './watcher/watcher.module';
 import { FavoriteModule } from './favorite/favorite.module';
 import { SessionModule } from './session/session.module';
 import { ClsMiddleware } from 'nestjs-cls';
+// OEM 挂载点：注册独立的 ONLYOFFICE 服务端模块，业务逻辑不得散落到 CoreModule。
 import { OnlyOfficeModule } from '../integrations/onlyoffice/onlyoffice.module';
 
 @Module({
@@ -43,6 +44,7 @@ import { OnlyOfficeModule } from '../integrations/onlyoffice/onlyoffice.module';
     NotificationModule,
     WatcherModule,
     SessionModule,
+    // OEM 挂载点：使 ONLYOFFICE 会话、文件读取和保存回调接口生效。
     OnlyOfficeModule,
   ],
 })

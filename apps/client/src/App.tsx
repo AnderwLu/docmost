@@ -45,6 +45,7 @@ import TemplateEditor from "@/ee/template/pages/template-editor";
 import FavoritesPage from "@/pages/favorites/favorites-page";
 import AiChat from "@/ee/ai-chat/pages/ai-chat.tsx";
 import VerifyEmail from "@/ee/pages/verify-email.tsx";
+// OEM 挂载点：独立编辑页由 ONLYOFFICE 集成目录维护，避免业务逻辑进入官方路由文件。
 import OnlyOfficeEditorPage from "@/integrations/onlyoffice/onlyoffice-editor-page";
 
 export default function App() {
@@ -86,6 +87,7 @@ export default function App() {
         <Route path={"/pdf-render/:pageId"} element={<PdfRenderPage />} />
         <Route path={"/share/:shareId"} element={<ShareRedirect />} />
         <Route path={"/p/:pageSlug"} element={<PageRedirect />} />
+        {/* OEM 挂载点：附件在新标签页打开独立的 ONLYOFFICE 编辑页面。 */}
         <Route
           path={"/office/edit/:attachmentId"}
           element={<OnlyOfficeEditorPage />}

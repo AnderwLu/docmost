@@ -87,6 +87,7 @@ export class EnvironmentService {
     return this.configService.get<string>('FILE_UPLOAD_SIZE_LIMIT', '50mb');
   }
 
+  // OEM 配置：以下变量隔离 ONLYOFFICE 内部地址、浏览器地址和回调访问地址。
   getOnlyOfficeInternalUrl(): string {
     return this.getRequiredUrl('ONLYOFFICE_INTERNAL_URL');
   }
@@ -122,6 +123,7 @@ export class EnvironmentService {
     return this.configService.get<string>('FILE_IMPORT_SIZE_LIMIT', '200mb');
   }
 
+  // OEM 安全约束：缺少密钥或地址时启动失败，禁止带着不完整配置提供编辑服务。
   private getRequiredValue(key: string): string {
     const value = this.configService.get<string>(key)?.trim();
     if (!value) {

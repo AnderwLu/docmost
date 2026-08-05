@@ -62,6 +62,7 @@ export class LocalDriver implements StorageDriver {
     }
   }
 
+  // OEM 存储扩展点：同一文件系统使用 rename 原子替换，避免半写入附件。
   async replace(fromFilePath: string, toFilePath: string): Promise<void> {
     try {
       const fromFullPath = this._fullPath(fromFilePath);

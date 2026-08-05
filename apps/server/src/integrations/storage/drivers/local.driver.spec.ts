@@ -69,6 +69,7 @@ describe('LocalDriver._fullPath', () => {
   });
 });
 
+// OEM 回归测试：确保 ONLYOFFICE 保存所依赖的本地原子替换不会退化。
 describe('LocalDriver.replace', () => {
   let storagePath: string;
 

@@ -25,6 +25,7 @@ export class StorageService {
     this.logger.debug(`File copied successfully. Path: ${toFilePath}`);
   }
 
+  // OEM 存储扩展点：ONLYOFFICE 保存统一通过驱动实现替换，禁止直接操作磁盘路径。
   async replace(fromFilePath: string, toFilePath: string) {
     await this.storageDriver.replace(fromFilePath, toFilePath);
     this.logger.debug(`File replaced successfully. Path: ${toFilePath}`);

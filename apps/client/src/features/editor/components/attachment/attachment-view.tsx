@@ -11,6 +11,7 @@ import { useHover } from "@mantine/hooks";
 import { formatBytes } from "@/lib";
 import { useTranslation } from "react-i18next";
 import { useCallback } from "react";
+// OEM 挂载点：格式判断和在线编辑业务保持在独立集成模块中。
 import { isOnlyOfficeFile } from "@/integrations/onlyoffice/onlyoffice-service";
 
 export default function AttachmentView(props: NodeViewProps) {
@@ -20,6 +21,7 @@ export default function AttachmentView(props: NodeViewProps) {
   const { hovered, ref } = useHover();
 
   const isPdf = mime === "application/pdf" || name?.toLowerCase().endsWith(".pdf");
+  // OEM 挂载点：只给首期支持的 OOXML 附件显示入口，旧格式继续沿用下载行为。
   const canOpenInOnlyOffice = !!attachmentId && isOnlyOfficeFile(name);
 
   const handleEmbedAsPdf = useCallback(() => {
@@ -82,6 +84,7 @@ export default function AttachmentView(props: NodeViewProps) {
 
           {url && (selected || hovered) && (
             <Group gap={4} wrap="nowrap" style={{ flexShrink: 0 }}>
+              {/* OEM 挂载点：新标签页打开，不改变官方附件下载入口。 */}
               {canOpenInOnlyOffice && (
                 <Tooltip
                   label={t("Open online")}

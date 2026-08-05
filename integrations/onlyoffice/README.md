@@ -34,17 +34,31 @@ The override assumes the existing ONLYOFFICE service is reachable at the configu
 - The module uploads a staged object, copies the original to a backup object, replaces the original, then updates attachment size and timestamp.
 - If the database update or replacement fails, it restores the backup. Temporary and backup objects are cleaned up on all paths.
 
-## Core mount points
+## Docmost 官方文件修改记录
 
-| Upstream file                                                               | Reason                                                    | Verification                                                                       |
-| --------------------------------------------------------------------------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `apps/server/src/core/core.module.ts`                                       | Register `OnlyOfficeModule`.                              | Server build and session/callback tests.                                           |
-| `apps/client/src/App.tsx`                                                   | Register `/office/edit/:attachmentId`.                    | Client typecheck/build and manual route smoke test.                                |
-| `apps/client/src/features/editor/components/attachment/attachment-view.tsx` | Display the online-open action for supported attachments. | Client build plus format visibility smoke test.                                    |
-| Storage driver interface, local driver, S3 driver, and service              | Add backend-neutral staged replacement.                   | Local-driver atomic replacement test; S3 smoke test required before S3 deployment. |
-| `apps/server/src/integrations/environment/environment.service.ts`           | Read and validate integration configuration.              | Server build and startup with/without required values.                             |
+下面逐一记录相对于官方 `v0.80.2` 修改过的文件。升级 Docmost 时必须逐项核对；表中未列出的 ONLYOFFICE 代码均为本项目新增文件。
 
-All other server and client business logic is under each application's `src/integrations/onlyoffice/` directory.
+| 官方文件                                                                      | 修改原因                                                      | 中文注释位置                                 | 验证方式                                     |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------- | -------------------------------------------- | -------------------------------------------- |
+| `.env.example`                                                                | 声明定制镜像所需的 ONLYOFFICE 地址、JWT 密钥和短期令牌配置。  | ONLYOFFICE 环境变量区块上方。                | Compose 配置检查、容器启动配置校验。         |
+| `apps/server/src/core/core.module.ts`                                         | 注册独立 `OnlyOfficeModule`，让会话、文件读取和回调接口生效。 | 模块 import 和 imports 数组项旁。            | 服务端构建、会话与回调测试。                 |
+| `apps/server/src/integrations/environment/environment.service.ts`             | 读取并校验三个网络地址、两个密钥和令牌时效。                  | ONLYOFFICE getter 区块及必填值校验方法上方。 | 服务端构建、缺失配置启动失败。               |
+| `apps/server/src/integrations/storage/interfaces/storage-driver.interface.ts` | 给存储抽象增加后端无关的 `replace` 能力。                     | `replace` 接口上方。                         | TypeScript 构建。                            |
+| `apps/server/src/integrations/storage/storage.service.ts`                     | 暴露统一替换入口，避免 ONLYOFFICE 模块直接访问磁盘或 S3 SDK。 | `replace` 方法上方。                         | 服务端构建、保存服务测试。                   |
+| `apps/server/src/integrations/storage/drivers/local.driver.ts`                | 本地卷通过同文件系统 `rename` 原子发布已验证的暂存文件。      | `replace` 方法上方。                         | 本地驱动原子替换测试。                       |
+| `apps/server/src/integrations/storage/drivers/local.driver.spec.ts`           | 增加本地替换行为的回归测试。                                  | 新增测试套件上方。                           | Jest。                                       |
+| `apps/server/src/integrations/storage/drivers/s3.driver.ts`                   | S3 通过服务端复制发布暂存对象并删除暂存对象。                 | `replace` 方法上方。                         | 服务端构建；正式使用 S3 前执行 S3 冒烟测试。 |
+| `apps/client/src/App.tsx`                                                     | 注册新标签页编辑路由 `/office/edit/:attachmentId`。           | 页面 import 和 Route 上方。                  | 客户端构建、路由冒烟测试。                   |
+| `apps/client/src/features/editor/components/attachment/attachment-view.tsx`   | 对支持格式显示“在线打开”，同时保留官方的下载入口。            | 集成 import、格式判断和操作按钮旁。          | 客户端构建、附件格式显示测试。               |
+
+独立业务代码位于：
+
+- `apps/server/src/integrations/onlyoffice/`
+- `apps/client/src/integrations/onlyoffice/`
+- `integrations/onlyoffice/`
+- `docker-compose.onlyoffice.yml`
+
+升级时如果官方文件路径或职责发生变化，必须先更新本表和源码中的 `OEM 挂载点` / `OEM 存储扩展点` 注释，再完成合并，不能静默删除功能。
 
 ## Smoke test
 

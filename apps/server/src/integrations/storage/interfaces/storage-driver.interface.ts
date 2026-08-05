@@ -7,6 +7,7 @@ export interface StorageDriver {
 
   copy(fromFilePath: string, toFilePath: string): Promise<void>;
 
+  // OEM 存储扩展点：用已验证的暂存文件替换原附件，并兼容本地与 S3 驱动。
   replace(fromFilePath: string, toFilePath: string): Promise<void>;
 
   read(filePath: string): Promise<Buffer>;
