@@ -30,6 +30,7 @@ import { DomainService } from '../../../integrations/environment/domain.service'
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { addDays } from 'date-fns';
 import { DISALLOWED_HOSTNAMES, WorkspaceStatus } from '../workspace.constants';
+import { isAdminActingOnOwner } from '../workspace.util';
 import { v4 } from 'uuid';
 import { InjectQueue } from '@nestjs/bullmq';
 import { QueueJob, QueueName } from '../../../integrations/queue/constants';
@@ -331,7 +332,9 @@ export class WorkspaceService {
       typeof updateWorkspaceDto.trashRetentionDays !== 'undefined' ||
       typeof updateWorkspaceDto.mcpEnabled !== 'undefined' ||
       typeof updateWorkspaceDto.restrictApiToAdmins !== 'undefined' ||
-      typeof updateWorkspaceDto.allowMemberTemplates !== 'undefined'
+      typeof updateWorkspaceDto.allowMemberTemplates !== 'undefined' ||
+      typeof updateWorkspaceDto.isScimEnabled !== 'undefined' ||
+      typeof updateWorkspaceDto.allowPersonalSpaces !== 'undefined'
     ) {
       const ws = await this.db
         .selectFrom('workspaces')
@@ -348,6 +351,26 @@ export class WorkspaceService {
           throw new ForbiddenException(
             'This feature requires a valid license',
           );
+        }
+      }
+
+      if (typeof updateWorkspaceDto.isScimEnabled !== 'undefined') {
+        if (!this.licenseCheckService.hasFeature(ws.licenseKey, Feature.SCIM, ws.plan)) {
+          throw new ForbiddenException(
+            'This feature requires a valid license',
+          );
+        }
+      }
+
+      if (typeof updateWorkspaceDto.allowPersonalSpaces !== 'undefined') {
+        if (
+          !this.licenseCheckService.hasFeature(
+            ws.licenseKey,
+            Feature.PERSONAL_SPACES,
+            ws.plan,
+          )
+        ) {
+          throw new ForbiddenException('This feature requires a valid license');
         }
       }
 
@@ -490,6 +513,34 @@ export class WorkspaceService {
         );
       }
 
+      if (typeof updateWorkspaceDto.allowPersonalSpaces !== 'undefined') {
+        const prev = settingsBefore?.spaces?.allowPersonal ?? false;
+        if (prev !== updateWorkspaceDto.allowPersonalSpaces) {
+          before.allowPersonalSpaces = prev;
+          after.allowPersonalSpaces = updateWorkspaceDto.allowPersonalSpaces;
+        }
+        await this.workspaceRepo.updateSpaceSettings(
+          workspaceId,
+          'allowPersonal',
+          updateWorkspaceDto.allowPersonalSpaces,
+          trx,
+        );
+      }
+
+      if (typeof updateWorkspaceDto.defaultPageEditMode !== 'undefined') {
+        const prev = settingsBefore?.defaultPageEditMode ?? null;
+        const next = updateWorkspaceDto.defaultPageEditMode.toLowerCase();
+        if (prev !== next) {
+          before.defaultPageEditMode = prev;
+          after.defaultPageEditMode = next;
+        }
+        await this.workspaceRepo.updateDefaultPageEditMode(
+          workspaceId,
+          next,
+          trx,
+        );
+      }
+
       delete updateWorkspaceDto.restrictApiToAdmins;
       delete updateWorkspaceDto.aiSearch;
       delete updateWorkspaceDto.generativeAi;
@@ -497,6 +548,8 @@ export class WorkspaceService {
       delete updateWorkspaceDto.mcpEnabled;
       delete updateWorkspaceDto.allowMemberTemplates;
       delete updateWorkspaceDto.aiChat;
+      delete updateWorkspaceDto.allowPersonalSpaces;
+      delete updateWorkspaceDto.defaultPageEditMode;
 
       await this.workspaceRepo.updateWorkspace(
         updateWorkspaceDto,
@@ -535,6 +588,7 @@ export class WorkspaceService {
         'enforceSso',
         'enforceMfa',
         'emailDomains',
+        'isScimEnabled',
       ],
       updateWorkspaceDto,
       workspaceBefore,
@@ -580,8 +634,8 @@ export class WorkspaceService {
 
     // prevent ADMIN from managing OWNER role
     if (
-      (authUser.role === UserRole.ADMIN && newRole === UserRole.OWNER) ||
-      (authUser.role === UserRole.ADMIN && user.role === UserRole.OWNER)
+      isAdminActingOnOwner(authUser.role, newRole) ||
+      isAdminActingOnOwner(authUser.role, user.role)
     ) {
       throw new ForbiddenException();
     }
@@ -685,7 +739,7 @@ export class WorkspaceService {
       throw new BadRequestException('You cannot deactivate yourself');
     }
 
-    if (authUser.role === UserRole.ADMIN && user.role === UserRole.OWNER) {
+    if (isAdminActingOnOwner(authUser.role, user.role)) {
       throw new BadRequestException(
         'You cannot deactivate a user with owner role',
       );
@@ -743,7 +797,7 @@ export class WorkspaceService {
       throw new BadRequestException('User is not deactivated');
     }
 
-    if (authUser.role === UserRole.ADMIN && user.role === UserRole.OWNER) {
+    if (isAdminActingOnOwner(authUser.role, user.role)) {
       throw new BadRequestException(
         'You cannot activate a user with owner role',
       );
@@ -795,7 +849,7 @@ export class WorkspaceService {
       throw new BadRequestException('You cannot delete yourself');
     }
 
-    if (authUser.role === UserRole.ADMIN && user.role === UserRole.OWNER) {
+    if (isAdminActingOnOwner(authUser.role, user.role)) {
       throw new BadRequestException('You cannot delete a user with owner role');
     }
 
