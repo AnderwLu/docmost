@@ -33,7 +33,7 @@ The override assumes the existing ONLYOFFICE service is reachable at the configu
 - The edited file must be a non-empty OOXML ZIP with the expected Word, Excel, or PowerPoint structure.
 - The module uploads a staged object, copies the original to a backup object, replaces the original, then updates attachment size and timestamp.
 - If the database update or replacement fails, it restores the backup. Temporary and backup objects are cleaned up on all paths.
-- The first release does not share collaborative sessions. Every editor open receives a fresh document key so a failed Document Server cache entry cannot poison later attempts.
+- The document key is stable for the same attachment ID and `updatedAt` value so Document Server can reuse its conversion cache. A successful save updates `updatedAt`, which automatically produces a new key for the next version.
 
 ## Docmost 官方文件修改记录
 

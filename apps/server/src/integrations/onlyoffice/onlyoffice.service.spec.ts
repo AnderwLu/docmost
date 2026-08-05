@@ -71,12 +71,31 @@ describe('OnlyOfficeService', () => {
     expect(session.config.token).toEqual(expect.any(String));
   });
 
-  it('uses a fresh document key for every non-collaborative editing session', async () => {
+  it('reuses the document key for the same attachment version', async () => {
     const first = await service.createSession(
       attachment.id,
       user as any,
       'workspace-1',
     );
+    const second = await service.createSession(
+      attachment.id,
+      user as any,
+      'workspace-1',
+    );
+
+    expect(first.config.document.key).toBe(second.config.document.key);
+  });
+
+  it('changes the document key after the attachment version is updated', async () => {
+    const first = await service.createSession(
+      attachment.id,
+      user as any,
+      'workspace-1',
+    );
+    attachmentRepo.findById.mockResolvedValueOnce({
+      ...attachment,
+      updatedAt: new Date('2026-08-05T00:01:00Z'),
+    });
     const second = await service.createSession(
       attachment.id,
       user as any,
