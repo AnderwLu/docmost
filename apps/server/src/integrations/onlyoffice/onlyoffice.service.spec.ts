@@ -97,6 +97,17 @@ describe('OnlyOfficeService', () => {
         `Bearer ${sign({ payload: true }, 'document-server-secret')}`,
       ),
     ).not.toThrow();
+    expect(() =>
+      service.verifyCallbackJwt(
+        sign({ payload: true }, 'document-server-secret'),
+      ),
+    ).not.toThrow();
+    expect(() =>
+      service.verifyCallbackJwt(
+        undefined,
+        sign({ payload: true }, 'document-server-secret'),
+      ),
+    ).not.toThrow();
   });
 
   it('ignores callback statuses that do not represent a final save', async () => {

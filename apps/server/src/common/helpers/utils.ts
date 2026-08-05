@@ -165,8 +165,17 @@ export function isUserDisabled(user: {
 }
 
 const SENSITIVE_URL_PREFIXES = ['/api/sso/'];
+const SENSITIVE_PATH_TOKEN_PREFIXES = [
+  '/api/office/files/',
+  '/api/office/callback/',
+];
 
 export function redactSensitiveUrl(url: string): string {
+  // OEM 安全挂载点：ONLYOFFICE 的文件和回调令牌位于路径中，日志只保留路由前缀。
+  const tokenPrefix = SENSITIVE_PATH_TOKEN_PREFIXES.find((prefix) =>
+    url?.includes(prefix),
+  );
+  if (tokenPrefix) return `${tokenPrefix}[REDACTED]`;
   if (url && SENSITIVE_URL_PREFIXES.some((prefix) => url.includes(prefix))) {
     const qsIndex = url.indexOf('?');
     if (qsIndex !== -1) {

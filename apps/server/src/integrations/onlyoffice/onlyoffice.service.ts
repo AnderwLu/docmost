@@ -123,8 +123,10 @@ export class OnlyOfficeService implements OnModuleInit {
     return payload;
   }
 
-  verifyCallbackJwt(authorization?: string) {
-    const token = authorization?.match(/^Bearer\s+(.+)$/i)?.[1];
+  verifyCallbackJwt(authorization?: string, bodyToken?: string) {
+    const headerToken = authorization?.match(/^Bearer\s+(.+)$/i)?.[1]
+      ?? authorization?.trim();
+    const token = headerToken || bodyToken;
     if (!token)
       throw new UnauthorizedException('Missing ONLYOFFICE callback JWT');
     try {

@@ -41,6 +41,8 @@ The override assumes the existing ONLYOFFICE service is reachable at the configu
 | 官方文件                                                                      | 修改原因                                                      | 中文注释位置                                 | 验证方式                                     |
 | ----------------------------------------------------------------------------- | ------------------------------------------------------------- | -------------------------------------------- | -------------------------------------------- |
 | `.env.example`                                                                | 声明定制镜像所需的 ONLYOFFICE 地址、JWT 密钥和短期令牌配置。  | ONLYOFFICE 环境变量区块上方。                | Compose 配置检查、容器启动配置校验。         |
+| `apps/server/src/common/helpers/utils.ts`                                     | 对日志中的 ONLYOFFICE 文件与回调路径令牌进行脱敏。            | `redactSensitiveUrl` 内的 OEM 安全挂载点。   | 回调失败日志检查，不得出现 JWT 或签名 URL。  |
+| `apps/server/src/common/helpers/utils.spec.ts`                                | 增加 ONLYOFFICE 路径令牌脱敏的回归测试。                      | 新增 `redactSensitiveUrl` 测试套件。         | Jest。                                       |
 | `apps/server/src/core/core.module.ts`                                         | 注册独立 `OnlyOfficeModule`，让会话、文件读取和回调接口生效。 | 模块 import 和 imports 数组项旁。            | 服务端构建、会话与回调测试。                 |
 | `apps/server/src/integrations/environment/environment.service.ts`             | 读取并校验三个网络地址、两个密钥和令牌时效。                  | ONLYOFFICE getter 区块及必填值校验方法上方。 | 服务端构建、缺失配置启动失败。               |
 | `apps/server/src/integrations/storage/interfaces/storage-driver.interface.ts` | 给存储抽象增加后端无关的 `replace` 能力。                     | `replace` 接口上方。                         | TypeScript 构建。                            |

@@ -57,9 +57,14 @@ export class OnlyOfficeController {
     @Param('token') token: string,
     @Body() body: OnlyOfficeCallbackBody,
     @Headers('authorization') authorization?: string,
+    @Headers('authorizationjwt') authorizationJwt?: string,
   ) {
     try {
-      this.onlyOfficeService.verifyCallbackJwt(authorization);
+      // OEM 兼容点：Document Server 可通过 JWT_HEADER=AuthorizationJwt 发送回调 JWT。
+      this.onlyOfficeService.verifyCallbackJwt(
+        authorizationJwt ?? authorization,
+        body.token,
+      );
       await this.onlyOfficeService.handleCallback(token, body);
       return { error: 0 };
     } catch (error) {
