@@ -1,6 +1,6 @@
 # ONLYOFFICE integration
 
-This customization adds authenticated online editing for Docmost `.docx`, `.xlsx`, and `.pptx` attachments. It is based on Docmost `v0.80.2` (`b99e3d67f58be988b7372db838532f640b1b5500`).
+This customization adds authenticated online editing for Docmost `.docx`, `.xlsx`, and `.pptx` attachments. The current baseline tree matches Docmost `v0.95.0` (`4132dd59be05a507dad76d1e01c48c9af2fd90f0`). The long-lived upstream branch keeps its historical name `docmost-v0.80.2` for compatibility with the agreed branch workflow.
 
 ## Configuration
 
@@ -28,7 +28,7 @@ The override assumes the existing ONLYOFFICE service is reachable at the configu
 
 ## Storage behavior
 
-- The current upstream storage abstraction supports both local volumes and S3-compatible storage.
+- The current upstream storage abstraction supports local volumes, S3-compatible storage, and Azure Blob Storage.
 - A save is downloaded with a 30-second timeout and bounded by `FILE_UPLOAD_SIZE_LIMIT`.
 - The edited file must be a non-empty OOXML ZIP with the expected Word, Excel, or PowerPoint structure.
 - The module uploads a staged object, copies the original to a backup object, replaces the original, then updates attachment size and timestamp.
@@ -36,7 +36,7 @@ The override assumes the existing ONLYOFFICE service is reachable at the configu
 
 ## Docmost 官方文件修改记录
 
-下面逐一记录相对于官方 `v0.80.2` 修改过的文件。升级 Docmost 时必须逐项核对；表中未列出的 ONLYOFFICE 代码均为本项目新增文件。
+下面逐一记录相对于官方 `v0.95.0` 修改过的文件。升级 Docmost 时必须逐项核对；表中未列出的 ONLYOFFICE 代码均为本项目新增文件。
 
 | 官方文件                                                                      | 修改原因                                                      | 中文注释位置                                 | 验证方式                                     |
 | ----------------------------------------------------------------------------- | ------------------------------------------------------------- | -------------------------------------------- | -------------------------------------------- |
@@ -48,6 +48,7 @@ The override assumes the existing ONLYOFFICE service is reachable at the configu
 | `apps/server/src/integrations/storage/drivers/local.driver.ts`                | 本地卷通过同文件系统 `rename` 原子发布已验证的暂存文件。      | `replace` 方法上方。                         | 本地驱动原子替换测试。                       |
 | `apps/server/src/integrations/storage/drivers/local.driver.spec.ts`           | 增加本地替换行为的回归测试。                                  | 新增测试套件上方。                           | Jest。                                       |
 | `apps/server/src/integrations/storage/drivers/s3.driver.ts`                   | S3 通过服务端复制发布暂存对象并删除暂存对象。                 | `replace` 方法上方。                         | 服务端构建；正式使用 S3 前执行 S3 冒烟测试。 |
+| `apps/server/src/integrations/storage/drivers/azure.driver.ts`                | Azure Blob 通过服务端复制发布暂存对象并删除暂存对象。         | `replace` 方法上方。                         | 服务端构建；正式使用 Azure 前执行冒烟测试。  |
 | `apps/client/src/App.tsx`                                                     | 注册新标签页编辑路由 `/office/edit/:attachmentId`。           | 页面 import 和 Route 上方。                  | 客户端构建、路由冒烟测试。                   |
 | `apps/client/src/features/editor/components/attachment/attachment-view.tsx`   | 对支持格式显示“在线打开”，同时保留官方的下载入口。            | 集成 import、格式判断和操作按钮旁。          | 客户端构建、附件格式显示测试。               |
 

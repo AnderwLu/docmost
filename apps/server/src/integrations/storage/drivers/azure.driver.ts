@@ -95,6 +95,12 @@ export class AzureDriver implements StorageDriver {
     }
   }
 
+  // OEM 存储扩展点：Azure Blob 通过服务端复制发布暂存对象，再删除暂存对象。
+  async replace(fromFilePath: string, toFilePath: string): Promise<void> {
+    await this.copy(fromFilePath, toFilePath);
+    await this.delete(fromFilePath);
+  }
+
   async read(filePath: string): Promise<Buffer> {
     try {
       return await this.blockBlob(filePath).downloadToBuffer();

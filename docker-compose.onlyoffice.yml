@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: anderwlu/docmost-onlyoffice:0.80.2
+    image: anderwlu/docmost-onlyoffice:0.95.0
     environment:
       ONLYOFFICE_INTERNAL_URL: ${ONLYOFFICE_INTERNAL_URL:?set ONLYOFFICE_INTERNAL_URL}
       ONLYOFFICE_BROWSER_URL: ${ONLYOFFICE_BROWSER_URL:?set ONLYOFFICE_BROWSER_URL}
