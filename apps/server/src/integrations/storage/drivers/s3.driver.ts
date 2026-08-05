@@ -100,6 +100,11 @@ export class S3Driver implements StorageDriver {
     }
   }
 
+  async replace(fromFilePath: string, toFilePath: string): Promise<void> {
+    await this.copy(fromFilePath, toFilePath);
+    await this.delete(fromFilePath);
+  }
+
   async read(filePath: string): Promise<Buffer> {
     try {
       const command = new GetObjectCommand({

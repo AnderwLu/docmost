@@ -1,5 +1,8 @@
 import { resolve, sep } from 'path';
 import { LocalDriver } from './local.driver';
+import * as fs from 'fs-extra';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 type FullPath = (filePath: string) => string;
 
@@ -63,5 +66,30 @@ describe('LocalDriver._fullPath', () => {
       expect(fullPath('.')).toBe(ROOT);
       expect(fullPath('a/..')).toBe(ROOT);
     });
+  });
+});
+
+describe('LocalDriver.replace', () => {
+  let storagePath: string;
+
+  beforeEach(async () => {
+    storagePath = await fs.mkdtemp(join(tmpdir(), 'docmost-storage-'));
+  });
+
+  afterEach(async () => {
+    await fs.remove(storagePath);
+  });
+
+  it('atomically replaces the destination and consumes the staged file', async () => {
+    const driver = new LocalDriver({ storagePath });
+    await driver.upload('files/document.docx', Buffer.from('old'));
+    await driver.upload('files/staged.docx', Buffer.from('new'));
+
+    await driver.replace('files/staged.docx', 'files/document.docx');
+
+    await expect(driver.read('files/document.docx')).resolves.toEqual(
+      Buffer.from('new'),
+    );
+    await expect(driver.exists('files/staged.docx')).resolves.toBe(false);
   });
 });

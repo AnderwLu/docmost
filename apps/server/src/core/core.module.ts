@@ -23,6 +23,7 @@ import { WatcherModule } from './watcher/watcher.module';
 import { FavoriteModule } from './favorite/favorite.module';
 import { SessionModule } from './session/session.module';
 import { ClsMiddleware } from 'nestjs-cls';
+import { OnlyOfficeModule } from '../integrations/onlyoffice/onlyoffice.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { ClsMiddleware } from 'nestjs-cls';
     NotificationModule,
     WatcherModule,
     SessionModule,
+    OnlyOfficeModule,
   ],
 })
 export class CoreModule implements NestModule {

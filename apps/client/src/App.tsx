@@ -45,6 +45,7 @@ import TemplateEditor from "@/ee/template/pages/template-editor";
 import FavoritesPage from "@/pages/favorites/favorites-page";
 import AiChat from "@/ee/ai-chat/pages/ai-chat.tsx";
 import VerifyEmail from "@/ee/pages/verify-email.tsx";
+import OnlyOfficeEditorPage from "@/integrations/onlyoffice/onlyoffice-editor-page";
 
 export default function App() {
   const { t } = useTranslation();
@@ -85,6 +86,10 @@ export default function App() {
         <Route path={"/pdf-render/:pageId"} element={<PdfRenderPage />} />
         <Route path={"/share/:shareId"} element={<ShareRedirect />} />
         <Route path={"/p/:pageSlug"} element={<PageRedirect />} />
+        <Route
+          path={"/office/edit/:attachmentId"}
+          element={<OnlyOfficeEditorPage />}
+        />
 
         <Route element={<Layout />}>
           <Route path={"/home"} element={<Home />} />

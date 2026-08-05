@@ -25,6 +25,11 @@ export class StorageService {
     this.logger.debug(`File copied successfully. Path: ${toFilePath}`);
   }
 
+  async replace(fromFilePath: string, toFilePath: string) {
+    await this.storageDriver.replace(fromFilePath, toFilePath);
+    this.logger.debug(`File replaced successfully. Path: ${toFilePath}`);
+  }
+
   async read(filePath: string): Promise<Buffer> {
     return this.storageDriver.read(filePath);
   }

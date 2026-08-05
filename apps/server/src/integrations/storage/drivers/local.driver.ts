@@ -62,6 +62,17 @@ export class LocalDriver implements StorageDriver {
     }
   }
 
+  async replace(fromFilePath: string, toFilePath: string): Promise<void> {
+    try {
+      const fromFullPath = this._fullPath(fromFilePath);
+      const toFullPath = this._fullPath(toFilePath);
+      await fs.mkdir(dirname(toFullPath), { recursive: true });
+      await fs.rename(fromFullPath, toFullPath);
+    } catch (err) {
+      throw new Error(`Failed to replace file: ${(err as Error).message}`);
+    }
+  }
+
   async read(filePath: string): Promise<Buffer> {
     try {
       return await fs.readFile(this._fullPath(filePath));

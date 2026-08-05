@@ -87,8 +87,53 @@ export class EnvironmentService {
     return this.configService.get<string>('FILE_UPLOAD_SIZE_LIMIT', '50mb');
   }
 
+  getOnlyOfficeInternalUrl(): string {
+    return this.getRequiredUrl('ONLYOFFICE_INTERNAL_URL');
+  }
+
+  getOnlyOfficeBrowserUrl(): string {
+    return this.configService.get<string>('ONLYOFFICE_BROWSER_URL')
+      ? this.getRequiredUrl('ONLYOFFICE_BROWSER_URL')
+      : this.getOnlyOfficeInternalUrl();
+  }
+
+  getOnlyOfficeDocmostUrl(): string {
+    return this.configService.get<string>('ONLYOFFICE_DOCMOST_URL')
+      ? this.getRequiredUrl('ONLYOFFICE_DOCMOST_URL')
+      : this.getAppUrl();
+  }
+
+  getOnlyOfficeJwtSecret(): string {
+    return this.getRequiredValue('ONLYOFFICE_JWT_SECRET');
+  }
+
+  getOnlyOfficeTokenSecret(): string {
+    return this.getRequiredValue('ONLYOFFICE_TOKEN_SECRET');
+  }
+
+  getOnlyOfficeTokenTtlSeconds(): number {
+    const value = Number(
+      this.configService.get<string>('ONLYOFFICE_TOKEN_TTL_SECONDS', '1800'),
+    );
+    return Number.isInteger(value) && value > 0 ? value : 1800;
+  }
+
   getFileImportSizeLimit(): string {
     return this.configService.get<string>('FILE_IMPORT_SIZE_LIMIT', '200mb');
+  }
+
+  private getRequiredValue(key: string): string {
+    const value = this.configService.get<string>(key)?.trim();
+    if (!value) {
+      throw new Error(`${key} must be configured to use ONLYOFFICE`);
+    }
+    return value;
+  }
+
+  private getRequiredUrl(key: string): string {
+    const value = this.getRequiredValue(key);
+    const url = new URL(value);
+    return url.origin;
   }
 
   getAwsS3AccessKeyId(): string {

@@ -7,6 +7,8 @@ export interface StorageDriver {
 
   copy(fromFilePath: string, toFilePath: string): Promise<void>;
 
+  replace(fromFilePath: string, toFilePath: string): Promise<void>;
+
   read(filePath: string): Promise<Buffer>;
 
   readStream(filePath: string): Promise<Readable>;

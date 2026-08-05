@@ -1,11 +1,17 @@
 import { NodeViewProps, NodeViewWrapper } from "@tiptap/react";
 import { Group, Text, Paper, ActionIcon, Loader, Tooltip } from "@mantine/core";
 import { getFileUrl } from "@/lib/config.ts";
-import { IconDownload, IconFileTypePdf, IconPaperclip } from "@tabler/icons-react";
+import {
+  IconDownload,
+  IconExternalLink,
+  IconFileTypePdf,
+  IconPaperclip,
+} from "@tabler/icons-react";
 import { useHover } from "@mantine/hooks";
 import { formatBytes } from "@/lib";
 import { useTranslation } from "react-i18next";
 import { useCallback } from "react";
+import { isOnlyOfficeFile } from "@/integrations/onlyoffice/onlyoffice-service";
 
 export default function AttachmentView(props: NodeViewProps) {
   const { t } = useTranslation();
@@ -14,6 +20,7 @@ export default function AttachmentView(props: NodeViewProps) {
   const { hovered, ref } = useHover();
 
   const isPdf = mime === "application/pdf" || name?.toLowerCase().endsWith(".pdf");
+  const canOpenInOnlyOffice = !!attachmentId && isOnlyOfficeFile(name);
 
   const handleEmbedAsPdf = useCallback(() => {
     const pos = getPos();
@@ -37,6 +44,15 @@ export default function AttachmentView(props: NodeViewProps) {
       )
       .run();
   }, [editor, getPos, node, url, name, attachmentId]);
+
+  const handleOpenInOnlyOffice = useCallback(() => {
+    if (!attachmentId) return;
+    window.open(
+      `/office/edit/${encodeURIComponent(attachmentId)}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
+  }, [attachmentId]);
 
   return (
     <NodeViewWrapper>
@@ -66,9 +82,32 @@ export default function AttachmentView(props: NodeViewProps) {
 
           {url && (selected || hovered) && (
             <Group gap={4} wrap="nowrap" style={{ flexShrink: 0 }}>
+              {canOpenInOnlyOffice && (
+                <Tooltip
+                  label={t("Open online")}
+                  position="top"
+                  withinPortal={false}
+                >
+                  <ActionIcon
+                    variant="default"
+                    aria-label={t("Open online")}
+                    onClick={handleOpenInOnlyOffice}
+                  >
+                    <IconExternalLink size={18} />
+                  </ActionIcon>
+                </Tooltip>
+              )}
               {isPdf && editor.isEditable && (
-                <Tooltip label={t("Embed as PDF")} position="top" withinPortal={false}>
-                  <ActionIcon variant="default" aria-label={t("Embed as PDF")} onClick={handleEmbedAsPdf}>
+                <Tooltip
+                  label={t("Embed as PDF")}
+                  position="top"
+                  withinPortal={false}
+                >
+                  <ActionIcon
+                    variant="default"
+                    aria-label={t("Embed as PDF")}
+                    onClick={handleEmbedAsPdf}
+                  >
                     <IconFileTypePdf size={18} />
                   </ActionIcon>
                 </Tooltip>
