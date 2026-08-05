@@ -57,7 +57,10 @@ export class OnlyOfficeService implements OnModuleInit {
 
     const extension = getOnlyOfficeExtension(attachment.fileName)!;
     const documentKey = createHash('sha256')
-      .update(`${attachment.id}:${attachment.updatedAt.toISOString()}`)
+      // OEM 会话隔离：首期不启用多人协同，每次打开使用新键，避免复用失败的 Document Server 缓存。
+      .update(
+        `${attachment.id}:${attachment.updatedAt.toISOString()}:${randomUUID()}`,
+      )
       .digest('hex')
       .slice(0, 40);
     const tokenBase = {

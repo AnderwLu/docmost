@@ -68,9 +68,10 @@ export class OnlyOfficeController {
       await this.onlyOfficeService.handleCallback(token, body);
       return { error: 0 };
     } catch (error) {
+      const errorCategory =
+        error instanceof Error ? error.constructor.name : 'UnknownError';
       this.logger.error(
-        `ONLYOFFICE callback failed with status ${body?.status ?? 'unknown'}`,
-        error,
+        `ONLYOFFICE callback failed with status ${body?.status ?? 'unknown'} category ${errorCategory}`,
       );
       return { error: 1 };
     }

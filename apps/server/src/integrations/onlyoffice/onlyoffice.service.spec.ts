@@ -71,6 +71,21 @@ describe('OnlyOfficeService', () => {
     expect(session.config.token).toEqual(expect.any(String));
   });
 
+  it('uses a fresh document key for every non-collaborative editing session', async () => {
+    const first = await service.createSession(
+      attachment.id,
+      user as any,
+      'workspace-1',
+    );
+    const second = await service.createSession(
+      attachment.id,
+      user as any,
+      'workspace-1',
+    );
+
+    expect(first.config.document.key).not.toBe(second.config.document.key);
+  });
+
   it('rejects a token used for the wrong purpose', async () => {
     const session = await service.createSession(
       attachment.id,
