@@ -75,6 +75,16 @@ Document exact variable names after they are aligned with the pinned upstream co
 6. Document upstream mount points, build steps, environment variables, upgrade procedure, smoke tests, and rollback.
 7. Run the repository's native formatting, lint, typecheck, unit, integration, and build commands relevant to changed files.
 
+## Git branch workflow
+
+- `upstream` points to `https://github.com/docmost/docmost.git`; `origin` points to `https://github.com/AnderwLu/docmost.git`.
+- `docmost-v0.80.2` is the clean Docmost upstream baseline branch. Do not place OEM or ONLYOFFICE changes on it.
+- `onlyoffice-integration` is the customization development branch and contains all project-specific code and documentation.
+- For an official Docmost upgrade, first fetch `upstream`, merge the selected official release into `docmost-v0.80.2`, resolve and verify that baseline, and push it to `origin`.
+- Only after the baseline upgrade succeeds, merge `docmost-v0.80.2` into `onlyoffice-integration`, resolve integration conflicts, run the full verification suite, and push the development branch.
+- Never merge a new official release directly from `upstream` into `onlyoffice-integration`.
+- Tag or record the exact official release/commit used for every baseline upgrade; never track a floating release.
+
 ## Testing requirements
 
 Cover at minimum:
