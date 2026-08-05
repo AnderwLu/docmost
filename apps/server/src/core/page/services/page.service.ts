@@ -15,7 +15,7 @@ import {
   executeWithCursorPagination,
 } from '@docmost/db/pagination/cursor-pagination';
 import { InjectKysely } from 'nestjs-kysely';
-import { KyselyDB } from '@docmost/db/types/kysely.types';
+import { KyselyDB, KyselyTransaction } from '@docmost/db/types/kysely.types';
 import { generateJitteredKeyBetween } from 'fractional-indexing-jittered';
 import { MovePageDto } from '../dto/move-page.dto';
 import { generateSlugId } from '../../../common/helpers';
@@ -54,6 +54,7 @@ import {
 import { markdownToHtml } from '@docmost/editor-ext';
 import { WatcherService } from '../../watcher/watcher.service';
 import { sql } from 'kysely';
+import { TransclusionService } from '../transclusion/transclusion.service';
 
 @Injectable()
 export class PageService {
@@ -71,6 +72,7 @@ export class PageService {
     private eventEmitter: EventEmitter2,
     private collaborationGateway: CollaborationGateway,
     private readonly watcherService: WatcherService,
+    private readonly transclusionService: TransclusionService,
   ) {}
 
   async findById(
@@ -90,6 +92,8 @@ export class PageService {
     userId: string,
     workspaceId: string,
     createPageDto: CreatePageDto,
+    trx?: KyselyTransaction,
+    isBase: boolean = false,
   ): Promise<Page> {
     let parentPageId = undefined;
 
@@ -138,21 +142,34 @@ export class PageService {
       creatorId: userId,
       workspaceId: workspaceId,
       lastUpdatedById: userId,
+      isBase,
       content,
       textContent,
       ydoc,
-    });
+    }, trx);
 
-    this.generalQueue
-      .add(QueueJob.ADD_PAGE_WATCHERS, {
-        userIds: [userId],
-        pageId: page.id,
-        spaceId: createPageDto.spaceId,
+    if (trx) {
+      // Add the watcher inside the caller's transaction so the async worker
+      // never inserts against an uncommitted page (FK violation on bases).
+      await this.watcherService.addPageWatchers(
+        [userId],
+        page.id,
+        createPageDto.spaceId,
         workspaceId,
-      })
-      .catch((err) =>
-        this.logger.warn(`Failed to queue add-page-watchers: ${err.message}`),
+        trx,
       );
+    } else {
+      this.generalQueue
+        .add(QueueJob.ADD_PAGE_WATCHERS, {
+          userIds: [userId],
+          pageId: page.id,
+          spaceId: createPageDto.spaceId,
+          workspaceId,
+        })
+        .catch((err) =>
+          this.logger.warn(`Failed to queue add-page-watchers: ${err.message}`),
+        );
+    }
 
     return page;
   }
@@ -287,6 +304,7 @@ export class PageService {
         'parentPageId',
         'spaceId',
         'creatorId',
+        'isBase',
         'deletedAt',
       ])
       .select((eb) => this.pageRepo.withHasChildren(eb))
@@ -308,6 +326,7 @@ export class PageService {
           expression: 'position',
           direction: 'asc',
           orderModifier: (ob) => ob.collate('C').asc(),
+          cursorExpression: sql`position collate "C"`,
         },
         { expression: 'id', direction: 'asc' },
       ],
@@ -423,11 +442,7 @@ export class PageService {
 
       if (pageIdsToMove.length > 1) {
         // Update sub pages (all accessible pages except root)
-        await this.pageRepo.updatePages(
-          { spaceId },
-          childPageIds,
-          trx,
-        );
+        await this.pageRepo.updatePages({ spaceId }, childPageIds, trx);
       }
 
       if (pageIdsToMove.length > 0) {
@@ -474,12 +489,16 @@ export class PageService {
         );
 
         // Update watchers and remove those without access to new space
-        await this.watcherService.movePageWatchersToSpace(pageIdsToMove, spaceId, {
-          trx,
-        });
+        await this.watcherService.movePageWatchersToSpace(
+          pageIdsToMove,
+          spaceId,
+          {
+            trx,
+          },
+        );
 
         await this.aiQueue.add(QueueJob.PAGE_MOVED_TO_SPACE, {
-          pageId: pageIdsToMove,
+          pageIds: pageIdsToMove,
           workspaceId: rootPage.workspaceId,
         });
       }
@@ -600,6 +619,17 @@ export class PageService {
             }
           }
 
+          // Remap transclusion-reference source pages to their copies when
+          // the source page is also being duplicated in the same operation.
+          if (node.type.name === 'transclusionReference') {
+            const sourcePageId = node.attrs.sourcePageId;
+            if (sourcePageId && pageMap.has(sourcePageId)) {
+              const mappedPage = pageMap.get(sourcePageId);
+              //@ts-ignore
+              node.attrs.sourcePageId = mappedPage.newPageId;
+            }
+          }
+
           // Update internal page links in link marks
           for (const mark of node.marks) {
             if (
@@ -658,6 +688,39 @@ export class PageService {
     );
 
     await this.db.insertInto('pages').values(insertablePages).execute();
+
+    // Extract transclusions from every duplicated page and persist them in
+    // one statement. Duplication bypasses Yjs onStoreDocument; brand-new
+    // pages never have prior rows so we can skip the diff and just bulk-insert.
+    try {
+      await this.transclusionService.insertTransclusionsForPages(
+        insertablePages.map((p) => ({
+          id: p.id,
+          workspaceId: p.workspaceId,
+          content: p.content,
+        })),
+      );
+    } catch (err) {
+      this.logger.error(
+        'Failed to insert transclusions for duplicated pages',
+        err,
+      );
+    }
+
+    try {
+      await this.transclusionService.insertReferencesForPages(
+        insertablePages.map((p) => ({
+          id: p.id,
+          workspaceId: p.workspaceId,
+          content: p.content,
+        })),
+      );
+    } catch (err) {
+      this.logger.error(
+        'Failed to insert transclusion references for duplicated pages',
+        err,
+      );
+    }
 
     const insertedPageIds = insertablePages.map((page) => page.id);
     this.eventEmitter.emit(EventName.PAGE_CREATED, {
@@ -785,6 +848,7 @@ export class PageService {
             'slugId',
             'title',
             'icon',
+            'isBase',
             'position',
             'parentPageId',
             'spaceId',
@@ -800,6 +864,7 @@ export class PageService {
                 'p.slugId',
                 'p.title',
                 'p.icon',
+                'p.isBase',
                 'p.position',
                 'p.parentPageId',
                 'p.spaceId',
@@ -812,13 +877,15 @@ export class PageService {
       .selectFrom('page_ancestors')
       .selectAll('page_ancestors')
       .select((eb) =>
-        eb.exists(
-          eb
-            .selectFrom('pages as child')
-            .select(sql`1`.as('one'))
-            .whereRef('child.parentPageId', '=', 'page_ancestors.id')
-            .where('child.deletedAt', 'is', null),
-        ).as('hasChildren'),
+        eb
+          .exists(
+            eb
+              .selectFrom('pages as child')
+              .select(sql`1`.as('one'))
+              .whereRef('child.parentPageId', '=', 'page_ancestors.id')
+              .where('child.deletedAt', 'is', null),
+          )
+          .as('hasChildren'),
       )
       .execute();
 
