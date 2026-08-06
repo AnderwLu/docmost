@@ -9,6 +9,8 @@
 ## 2. 已确认事实
 
 - Docmost 已通过 Docker 部署在飞牛服务器。
+- 当前集成基于 Docmost 官方 `v0.95.0`，上游完整提交为 `4132dd59be05a507dad76d1e01c48c9af2fd90f0`；长期基线分支为不绑定版本号的 `docmost-upstream-baseline`。每次升级 Docmost 时必须在同一变更中同步更新本条记录和 `integrations/onlyoffice/README.md` 的 “Upstream baseline” 表。
+- 当前生产 OEM 镜像为 `anderwlu/docmost-onlyoffice:0.95.0-b6617c44`，对应 OEM 提交 `b6617c44a26c65d1ec00414bbc34b4ff2736f173`。
 - ONLYOFFICE Document Server 已部署并可用。
 - 系统仅在内网使用，现阶段基本为单人使用。
 - 用户要求点击附件后在新标签页打开 ONLYOFFICE。
@@ -276,7 +278,6 @@ custom-docmost/
 
 | 编号 | 问题 | 阻塞程度 | 处理建议 |
 | --- | --- | --- | --- |
-| Q1 | 当前生产 Docmost 镜像对应的准确上游版本/提交号 | 开发前阻塞 | 通过镜像标签、容器元数据或源码版本确认 |
 | Q2 | 当前附件存储使用本地卷还是 S3 兼容对象存储 | 开发前阻塞 | 调研现有 Compose 环境变量和附件存储实现 |
 | Q3 | Docmost 附件覆盖是否已有可复用服务方法 | 开发前阻塞 | 优先复用现有存储服务，禁止直接拼接未知路径 |
 

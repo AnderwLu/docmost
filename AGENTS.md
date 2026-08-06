@@ -7,6 +7,7 @@ Implement the requirements in `Docmost-ONLYOFFICE集成需求开发规格.md` as
 ## Source of truth
 
 - Read `Docmost-ONLYOFFICE集成需求开发规格.md` before planning or changing code.
+- Read the "Upstream baseline" section in `integrations/onlyoffice/README.md` for the currently pinned Docmost tag and commit.
 - Treat its confirmed facts, scope, security rules, and acceptance criteria as authoritative.
 - Do not silently resolve an item listed under “未决问题和假设”. Inspect the actual deployment or upstream code first; ask the user when evidence is unavailable.
 - If implementation facts conflict with the specification, stop and report the conflict before broadening scope.
@@ -78,12 +79,13 @@ Document exact variable names after they are aligned with the pinned upstream co
 ## Git branch workflow
 
 - `upstream` points to `https://github.com/docmost/docmost.git`; `origin` points to `https://github.com/AnderwLu/docmost.git`.
-- `docmost-v0.80.2` is the clean Docmost upstream baseline branch. Do not place OEM or ONLYOFFICE changes on it.
+- `docmost-upstream-baseline` is the clean Docmost upstream baseline branch. Do not place OEM or ONLYOFFICE changes on it.
 - `onlyoffice-integration` is the customization development branch and contains all project-specific code and documentation.
-- For an official Docmost upgrade, first fetch `upstream`, merge the selected official release into `docmost-v0.80.2`, resolve and verify that baseline, and push it to `origin`.
-- Only after the baseline upgrade succeeds, merge `docmost-v0.80.2` into `onlyoffice-integration`, resolve integration conflicts, run the full verification suite, and push the development branch.
+- For an official Docmost upgrade, first fetch `upstream`, merge the selected official release into `docmost-upstream-baseline`, resolve and verify that baseline, and push it to `origin`.
+- Only after the baseline upgrade succeeds, merge `docmost-upstream-baseline` into `onlyoffice-integration`, resolve integration conflicts, run the full verification suite, and push the development branch.
 - Never merge a new official release directly from `upstream` into `onlyoffice-integration`.
-- Tag or record the exact official release/commit used for every baseline upgrade; never track a floating release.
+- After every baseline upgrade, update the exact official tag and full commit in both `Docmost-ONLYOFFICE集成需求开发规格.md` and the "Upstream baseline" section of `integrations/onlyoffice/README.md`.
+- Never track a floating release.
 
 ## Testing requirements
 

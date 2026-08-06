@@ -1,6 +1,19 @@
 # ONLYOFFICE integration
 
-This customization adds authenticated online editing for Docmost `.docx`, `.xlsx`, and `.pptx` attachments. The current baseline tree matches Docmost `v0.95.0` (`4132dd59be05a507dad76d1e01c48c9af2fd90f0`). The long-lived upstream branch keeps its historical name `docmost-v0.80.2` for compatibility with the agreed branch workflow.
+This customization adds authenticated online editing for Docmost `.docx`, `.xlsx`, and `.pptx` attachments.
+
+## Upstream baseline
+
+| Item | Current value |
+| --- | --- |
+| Official Docmost release | `v0.95.0` |
+| Official upstream commit | `4132dd59be05a507dad76d1e01c48c9af2fd90f0` |
+| Long-lived baseline branch | `docmost-upstream-baseline` |
+| Baseline branch head | `3dc85bd99fe1337cd9f8ecd0a45463563fde9c9b` |
+| Current OEM image | `anderwlu/docmost-onlyoffice:0.95.0-b6617c44` |
+| Current OEM commit | `b6617c44a26c65d1ec00414bbc34b4ff2736f173` |
+
+The branch name is intentionally version-independent. After every official Docmost upgrade, update this table and the matching confirmed fact in `Docmost-ONLYOFFICE集成需求开发规格.md` in the same change that adapts the integration. Do not leave an old release or commit recorded after an upgrade.
 
 ## Configuration
 
@@ -79,10 +92,11 @@ The override assumes the existing ONLYOFFICE service is reachable at the configu
 ## Upgrade and rollback
 
 1. Fetch the selected official release from `upstream` and record its tag and commit.
-2. Merge it into `docmost-v0.80.2`; do not add customization code to that branch.
+2. Merge it into `docmost-upstream-baseline`; do not add customization code to that branch.
 3. Build and verify the clean baseline, then push it to `origin`.
-4. Merge `docmost-v0.80.2` into `onlyoffice-integration`.
-5. Resolve the mount points listed above. A missing route, module registration, attachment action, or storage replacement implementation must fail build/tests rather than be silently omitted.
-6. Build the custom image and run the smoke test against a disposable database and attachment volume/bucket.
-7. Back up production data, deploy the new immutable image tag, and verify all three formats.
-8. On failure, redeploy the previous image tag while preserving the database and attachment volume/bucket. Restore data only if a database/storage migration explicitly requires it.
+4. Merge `docmost-upstream-baseline` into `onlyoffice-integration`.
+5. Update the "Upstream baseline" table above and the matching confirmed fact in `Docmost-ONLYOFFICE集成需求开发规格.md` with the new official tag and full commit.
+6. Resolve the mount points listed above. A missing route, module registration, attachment action, or storage replacement implementation must fail build/tests rather than be silently omitted.
+7. Build the custom image and run the smoke test against a disposable database and attachment volume/bucket.
+8. Back up production data, deploy the new immutable image tag, and verify all three formats.
+9. On failure, redeploy the previous image tag while preserving the database and attachment volume/bucket. Restore data only if a database/storage migration explicitly requires it.
