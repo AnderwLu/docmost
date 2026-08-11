@@ -7,6 +7,7 @@ import {
 import { PageRepo } from '@docmost/db/repos/page/page.repo';
 import { PageService } from '../../core/page/services/page.service';
 import { PageAccessService } from '../../core/page/page-access/page-access.service';
+import { ContentFormat } from '../../core/page/dto/create-page.dto';
 import SpaceAbilityFactory from '../../core/casl/abilities/space-ability.factory';
 import {
   SpaceCaslAction,
@@ -67,8 +68,9 @@ export class McpWriteService {
     input: {
       pageId: string;
       title?: string;
-      content?: string;
+      content?: string | object;
       operation?: 'append' | 'prepend' | 'replace';
+      format?: ContentFormat;
     },
   ) {
     if (input.title === undefined && input.content === undefined) {
@@ -94,7 +96,8 @@ export class McpWriteService {
           input.content === undefined
             ? undefined
             : input.operation || 'replace',
-        format: input.content === undefined ? undefined : 'markdown',
+        format:
+          input.content === undefined ? undefined : input.format || 'markdown',
       },
       principal.user,
     );

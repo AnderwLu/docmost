@@ -55,6 +55,8 @@ describe('McpServerFactory', () => {
       replaceAttachment: jest.fn(),
       createPageWithAttachments: jest.fn(),
       uploadAttachment: jest.fn(),
+      insertAttachmentNode: jest.fn(),
+      insertImageNode: jest.fn(),
     } as any;
     const server = new McpServerFactory(
       reads,
@@ -83,6 +85,8 @@ describe('McpServerFactory', () => {
       'get_current_user',
       'get_page',
       'get_space',
+      'insert_attachment_node',
+      'insert_image_node',
       'list_child_pages',
       'list_page_attachments',
       'list_pages',
@@ -100,7 +104,7 @@ describe('McpServerFactory', () => {
     ).toHaveLength(11);
     expect(
       tools.tools.filter((tool) => !tool.annotations?.readOnlyHint),
-    ).toHaveLength(11);
+    ).toHaveLength(13);
     expect(
       tools.tools.filter((tool) => tool.annotations?.destructiveHint),
     ).toHaveLength(2);
@@ -125,6 +129,8 @@ describe('McpServerFactory', () => {
         fileName: 'cases.xlsx',
         fileSize: 42n,
       }),
+      insertAttachmentNode: jest.fn(),
+      insertImageNode: jest.fn(),
     } as any;
     const server = new McpServerFactory(
       reads,
@@ -162,6 +168,15 @@ describe('McpServerFactory', () => {
         text: expect.stringContaining('"fileSize": 42'),
       },
     ]);
+    expect(mutations.uploadAttachment).toHaveBeenCalledWith(
+      principal,
+      '0198a000-0000-7000-8000-000000000002',
+      {
+        fileName: 'cases.xlsx',
+        contentBase64: 'eA==',
+      },
+      { insertIntoPage: false, display: 'attachment_card' },
+    );
     await client.close();
     await server.close();
   });

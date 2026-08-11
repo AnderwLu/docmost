@@ -37,6 +37,7 @@ import { McpPrincipal } from './mcp-api-key.service';
 import { McpWriteService } from './mcp-write.service';
 
 type EncodedFile = { fileName: string; contentBase64: string };
+type AttachmentDisplay = 'attachment_card' | 'image';
 
 type AttachmentDto = {
   id: string;
@@ -193,9 +194,15 @@ export class McpMutationService {
     principal: McpPrincipal,
     pageId: string,
     file: EncodedFile,
+    options: { insertIntoPage?: boolean; display?: AttachmentDisplay } = {},
   ) {
     const page = await this.requireEditablePage(principal, pageId, true);
     const prepared = this.decode(file);
+    const mimeType = getMimeType(prepared.fileName);
+    if (options.insertIntoPage && options.display === 'image') {
+      if (!mimeType?.startsWith('image/'))
+        throw new BadRequestException('Attachment is not an image');
+    }
     const attachmentId = uuid7();
     const filePath = `${getAttachmentFolderPath(AttachmentType.File, principal.workspace.id)}/${attachmentId}/${prepared.fileName}`;
     const preparedFile: PreparedFile = {
@@ -203,11 +210,12 @@ export class McpMutationService {
       fileName: prepared.fileName,
       fileSize: prepared.buffer.length,
       fileExtension: path.extname(prepared.fileName).toLowerCase(),
-      mimeType: getMimeType(prepared.fileName),
+      mimeType,
     };
     await this.attachmentService.uploadToDrive(filePath, prepared.buffer);
+    let attachment;
     try {
-      const attachment = await this.attachmentService.saveAttachment({
+      attachment = await this.attachmentService.saveAttachment({
         attachmentId,
         preparedFile,
         filePath,
@@ -217,11 +225,19 @@ export class McpMutationService {
         pageId: page.id,
         spaceId: page.spaceId,
       });
-      return this.toAttachmentDto(attachment);
     } catch (error) {
       await this.storage.delete(filePath).catch(() => undefined);
       throw error;
     }
+    const dto = this.toAttachmentDto(attachment);
+    if (options.insertIntoPage) {
+      if (options.display === 'image') {
+        await this.insertImageNode(principal, page.id, attachment.id);
+      } else {
+        await this.insertAttachmentNode(principal, page.id, attachment.id);
+      }
+    }
+    return dto;
   }
 
   async createPageWithAttachments(
@@ -239,6 +255,66 @@ export class McpMutationService {
     for (const file of input.attachments || [])
       uploaded.push(await this.uploadAttachment(principal, page.id, file));
     return { page, attachments: uploaded };
+  }
+
+  async insertAttachmentNode(
+    principal: McpPrincipal,
+    pageId: string,
+    attachmentId: string,
+  ) {
+    const { page, attachment } = await this.requirePageAttachment(
+      principal,
+      pageId,
+      attachmentId,
+    );
+    const node = {
+      type: 'attachment',
+      attrs: {
+        url: this.attachmentUrl(attachment),
+        name: attachment.fileName,
+        size: Number(attachment.fileSize ?? 0),
+        mime: attachment.mimeType,
+        attachmentId: attachment.id,
+      },
+    };
+    await this.writes.updatePage(principal, {
+      pageId: page.id,
+      content: node,
+      operation: 'append',
+      format: 'json',
+    });
+    return { pageId: page.id, attachment: this.toAttachmentDto(attachment) };
+  }
+
+  async insertImageNode(
+    principal: McpPrincipal,
+    pageId: string,
+    attachmentId: string,
+  ) {
+    const { page, attachment } = await this.requirePageAttachment(
+      principal,
+      pageId,
+      attachmentId,
+    );
+    if (!attachment.mimeType?.startsWith('image/'))
+      throw new BadRequestException('Attachment is not an image');
+    const node = {
+      type: 'image',
+      attrs: {
+        src: this.attachmentUrl(attachment),
+        alt: attachment.fileName,
+        align: 'center',
+        attachmentId: attachment.id,
+        size: Number(attachment.fileSize ?? 0),
+      },
+    };
+    await this.writes.updatePage(principal, {
+      pageId: page.id,
+      content: node,
+      operation: 'append',
+      format: 'json',
+    });
+    return { pageId: page.id, attachment: this.toAttachmentDto(attachment) };
   }
 
   private decode(file: EncodedFile) {
@@ -306,5 +382,26 @@ export class McpMutationService {
       throw new NotFoundException('Attachment not found');
     await this.requireEditablePage(principal, attachment.pageId, true);
     return attachment;
+  }
+
+  private async requirePageAttachment(
+    principal: McpPrincipal,
+    pageId: string,
+    attachmentId: string,
+  ) {
+    const page = await this.requireEditablePage(principal, pageId, true);
+    const attachment = await this.attachments.findById(attachmentId);
+    if (
+      !attachment ||
+      attachment.deletedAt ||
+      attachment.workspaceId !== principal.workspace.id ||
+      attachment.pageId !== page.id
+    )
+      throw new NotFoundException('Attachment not found');
+    return { page, attachment };
+  }
+
+  private attachmentUrl(attachment: { id: string; fileName: string }) {
+    return `/api/files/${attachment.id}/${attachment.fileName}`;
   }
 }

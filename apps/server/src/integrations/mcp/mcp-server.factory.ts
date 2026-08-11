@@ -45,7 +45,7 @@ export class McpServerFactory {
   ) {}
 
   create(principal: McpPrincipal) {
-    const server = new McpServer({ name: 'docmost-oem', version: '1.3.2' });
+    const server = new McpServer({ name: 'docmost-oem', version: '1.3.3' });
     const result = (value: unknown) => {
       const jsonValue = toMcpJsonValue(value);
       return {
@@ -328,19 +328,65 @@ export class McpServerFactory {
     server.registerTool(
       'upload_attachment',
       {
-        description: 'Upload a base64-encoded file to an editable page.',
+        description:
+          'Upload a base64-encoded file to an editable page, optionally inserting an editor node into the page.',
         inputSchema: {
           pageId: z.string().uuid(),
           ...encodedFile,
+          insertIntoPage: z.boolean().default(false),
+          display: z
+            .enum(['attachment_card', 'image'])
+            .default('attachment_card'),
         },
         annotations: writeOperation,
       },
-      async ({ pageId, fileName, contentBase64 }) =>
+      async ({ pageId, fileName, contentBase64, insertIntoPage, display }) =>
         result(
-          await this.mutations.uploadAttachment(principal, pageId, {
-            fileName,
-            contentBase64,
-          }),
+          await this.mutations.uploadAttachment(
+            principal,
+            pageId,
+            {
+              fileName,
+              contentBase64,
+            },
+            { insertIntoPage, display },
+          ),
+        ),
+    );
+    server.registerTool(
+      'insert_attachment_node',
+      {
+        description:
+          'Insert an existing page attachment as an attachment-card editor node.',
+        inputSchema: {
+          pageId: z.string().uuid(),
+          attachmentId: z.string().uuid(),
+        },
+        annotations: writeOperation,
+      },
+      async ({ pageId, attachmentId }) =>
+        result(
+          await this.mutations.insertAttachmentNode(
+            principal,
+            pageId,
+            attachmentId,
+          ),
+        ),
+    );
+    server.registerTool(
+      'insert_image_node',
+      {
+        description:
+          'Insert an existing image attachment as an image editor node.',
+        inputSchema: {
+          pageId: z.string().uuid(),
+          attachmentId: z.string().uuid(),
+        },
+        annotations: writeOperation,
+      },
+      async ({ pageId, attachmentId }) =>
+        result(
+          await this.mutations.insertImageNode(principal, pageId, attachmentId),
         ),
     );
     server.registerTool(
