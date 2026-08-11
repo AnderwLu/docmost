@@ -1,0 +1,73 @@
+# Read-only MCP integration
+
+This OEM integration makes Docmost a Model Context Protocol server without using
+the unbundled Docmost Enterprise MCP implementation. It uses the public MCP SDK
+already pinned by Docmost and is intentionally limited to read-only tools.
+
+## Upstream baseline
+
+| Item                     | Current value                              |
+| ------------------------ | ------------------------------------------ |
+| Official Docmost release | `v0.95.0`                                  |
+| Official upstream commit | `4132dd59be05a507dad76d1e01c48c9af2fd90f0` |
+| OEM development branch   | `onlyoffice-integration`                   |
+
+## Endpoint and authentication
+
+- Streamable HTTP endpoint: `POST /mcp`
+- Authentication: `Authorization: Bearer <personal API key>`
+- Create and revoke keys under **Settings → Account → API keys**.
+- API keys are JWTs signed with the existing `APP_SECRET`. The token embeds the
+  user, workspace and revocable `api_keys` row ID. Every MCP request verifies the
+  signature, expiration, database row, owner, workspace and active-user state.
+- Revoking a key invalidates it immediately. Tokens and page content are never logged.
+
+No additional environment variables or business tables are introduced. The
+upstream `api_keys` migration is reused.
+
+## First-release tools
+
+- `search_pages`
+- `get_page`
+- `list_pages`
+- `list_child_pages`
+- `get_space`
+- `list_spaces`
+- `search_attachments`
+- `get_current_user`
+
+All tools carry the MCP read-only annotation. Page results are restricted to
+spaces available through direct or group membership and are filtered again using
+Docmost's inherited page-permission implementation. Attachment results use the
+same space and parent-page checks. Deleted records and other workspaces are excluded.
+
+## Upstream mount points
+
+| Upstream-owned file                                        | Reason                                                                               | Verification                                 |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------- |
+| `apps/server/src/core/core.module.ts`                      | Registers the isolated `McpModule`.                                                  | Server build and MCP factory test.           |
+| `apps/client/src/components/settings/settings-sidebar.tsx` | Makes personal API keys available in the OEM build.                                  | Client build and manual settings smoke test. |
+| `apps/client/src/ee/ai/components/mcp-settings.tsx`        | Replaces the enterprise license switch with truthful read-only OEM endpoint details. | Client build and manual settings smoke test. |
+| `apps/client/src/ee/api-key/pages/user-api-keys.tsx`       | Always shows the MCP connection hint in this OEM build.                              | Client build and manual settings smoke test. |
+
+Server business logic is isolated under `apps/server/src/integrations/mcp/`.
+
+## Smoke test
+
+1. Sign in and create a personal API key. Copy it before closing the dialog.
+2. Configure an MCP client with the Docmost public URL ending in `/mcp` and the
+   key as its Bearer token.
+3. Confirm `tools/list` returns exactly the eight tools above.
+4. Call `get_current_user`; confirm it returns the key owner and current workspace.
+5. Test page, child-page, space and attachment queries against accessible content.
+6. Create a restricted page and an inaccessible space; confirm neither is returned
+   by search/list and direct IDs return a tool error.
+7. Revoke the key and confirm the next MCP request returns HTTP 401.
+
+## Upgrade check
+
+After merging a pinned Docmost release into the baseline branch, verify the four
+mount points above, the `api_keys` schema, `TokenService.generateApiToken`, space
+membership queries and inherited page permissions. Then run server tests/build,
+client build and the smoke test. Do not silently fall back to raw database reads if
+an upstream permission API changes.

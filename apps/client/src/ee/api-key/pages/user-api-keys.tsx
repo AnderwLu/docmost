@@ -29,7 +29,6 @@ export default function UserApiKeys() {
   const { data, isLoading } = useGetApiKeysQuery({ cursor });
   const [workspace] = useAtom(workspaceAtom);
   const { isAdmin } = useUserRole();
-  const mcpEnabled = workspace?.settings?.ai?.mcp === true;
   const restrictToAdmins = workspace?.settings?.api?.restrictToAdmins === true;
   const canCreate = !restrictToAdmins || isAdmin;
 
@@ -66,7 +65,7 @@ export default function UserApiKeys() {
         />
       </Text>
 
-      {mcpEnabled && canCreate && (
+      {canCreate && (
         <Alert variant="light" color="blue" mb="md" p="sm" icon={<IconInfoCircle />}>
           <Text size="sm">
             {t(

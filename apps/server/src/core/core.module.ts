@@ -26,6 +26,8 @@ import { SessionModule } from './session/session.module';
 import { ClsMiddleware } from 'nestjs-cls';
 // OEM 挂载点：注册独立的 ONLYOFFICE 服务端模块，业务逻辑不得散落到 CoreModule。
 import { OnlyOfficeModule } from '../integrations/onlyoffice/onlyoffice.module';
+// OEM 挂载点：MCP 协议、鉴权和只读工具均封装在独立集成模块中。
+import { McpModule } from '../integrations/mcp/mcp.module';
 
 @Module({
   imports: [
@@ -48,6 +50,8 @@ import { OnlyOfficeModule } from '../integrations/onlyoffice/onlyoffice.module';
     SessionModule,
     // OEM 挂载点：使 ONLYOFFICE 会话、文件读取和保存回调接口生效。
     OnlyOfficeModule,
+    // OEM 挂载点：注册独立的 Streamable HTTP MCP 服务和个人 API Key 接口。
+    McpModule,
   ],
 })
 export class CoreModule implements NestModule {
