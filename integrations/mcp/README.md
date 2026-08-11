@@ -1,4 +1,4 @@
-# Read-only MCP integration
+# MCP integration
 
 This OEM integration makes Docmost a Model Context Protocol server without using
 the unbundled Docmost Enterprise MCP implementation. It uses the public MCP SDK
@@ -13,9 +13,12 @@ isolated integration.
 | Official upstream commit | `4132dd59be05a507dad76d1e01c48c9af2fd90f0` |
 | OEM development branch   | `onlyoffice-integration`                   |
 
-MCP release `mcp-readonly-v1.0.0` is commit
-`0366245e445d4f12846f8da056c0767c38b52819`. The production image is
-`anderwlu/docmost-onlyoffice:0.95.0-mcp-0366245e`.
+MCP release `mcp-v1.1.0` is commit
+`b4d38c0aceea8fe09245aa8107d53f9d47a0fad8`. Its immutable production image is
+`anderwlu/docmost-onlyoffice:mcp-v1.1.0` with image ID
+`sha256:d09b783e2a86b64ecdcdc43de236c13ab72fe95d1c25559b7fa4ee97a09d4c36`.
+The preceding read-only release is tagged `mcp-readonly-v1.0.0` at commit
+`0366245e445d4f12846f8da056c0767c38b52819`.
 
 ## Production deployment
 
@@ -23,9 +26,14 @@ MCP release `mcp-readonly-v1.0.0` is commit
 - Only the `docmost` service was recreated with `--no-deps`.
 - PostgreSQL, Redis and ONLYOFFICE were not restarted.
 - Pre-deployment rollback data is stored at
-  `/vol1/1000/docker/docmost/backups/mcp-20260811-102036` on the deployment host.
-- The previous image `anderwlu/docmost-onlyoffice:0.95.0-b6617c44` remains the
-  immediate rollback target.
+  `/vol1/1000/docker/docmost/backups/mcp-v1.1.0-20260811-105103` on the deployment
+  host. The PostgreSQL custom-format dump was verified with `pg_restore -l`.
+- The previous image `anderwlu/docmost-onlyoffice:0.95.0-mcp-0366245e` remains
+  the immediate rollback target.
+- Production smoke verification passed for API-key authentication, all fourteen
+  tools, XLSX text extraction, signed attachment download, page create/update/move,
+  comment creation, invalid-key rejection and immediate key revocation. Temporary
+  verification data was removed.
 
 ## Endpoint and authentication
 
