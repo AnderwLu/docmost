@@ -25,7 +25,9 @@ export default function McpSettings() {
             {t(
               "Enable the MCP server to allow AI assistants and tools to interact with your workspace content.",
             )}{" "}
-            {t("This OEM build provides a read-only MCP server.")}
+            {t(
+              "This OEM build provides permission-aware read and write tools.",
+            )}
           </Text>
         </div>
       </Group>
@@ -84,6 +86,17 @@ export default function McpSettings() {
             <List.Item>
               <Text size="sm" c="dimmed" span>
                 create_page, update_page, move_page, create_comment
+              </Text>
+            </List.Item>
+            <List.Item>
+              <Text size="sm" c="dimmed" span>
+                update_space, delete_space, list_page_attachments
+              </Text>
+            </List.Item>
+            <List.Item>
+              <Text size="sm" c="dimmed" span>
+                delete_attachment, replace_attachment,
+                create_page_with_attachments
               </Text>
             </List.Item>
           </List>

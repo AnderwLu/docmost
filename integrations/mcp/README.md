@@ -64,9 +64,16 @@ upstream `api_keys` migration is reused.
 - `update_page`
 - `move_page`
 - `create_comment`
+- `update_space`
+- `delete_space`
+- `list_page_attachments`
+- `delete_attachment`
+- `replace_attachment`
+- `create_page_with_attachments`
 
-The ten read tools carry the MCP read-only annotation. The four write tools are
-explicitly annotated as non-read-only and non-idempotent. All page and attachment
+The eleven read tools carry the MCP read-only annotation. The nine write tools are
+explicitly annotated as non-read-only and non-idempotent. `delete_space` and
+`delete_attachment` additionally carry `destructiveHint: true`. All page and attachment
 operations enforce space membership and Docmost's inherited page permissions.
 Deleted records and other workspaces are excluded.
 
@@ -81,6 +88,15 @@ Write tools reuse `PageService`, `CommentService`, page-access validation and
 space CASL abilities. Page content uses Markdown. `update_page` supports `replace`,
 `append` and `prepend`; `move_page` supports reparenting, moving to root and moving
 to another writable space.
+
+`list_page_attachments` returns attachment metadata only after page-view validation.
+Attachment deletion and replacement require page-edit permission. Replacement copies
+the original storage object to a temporary rollback object, replaces the bytes through
+the storage abstraction, and preserves the attachment ID, path and page relationship.
+Files are base64 encoded and reuse Docmost's configured upload-size limit.
+`create_page_with_attachments` reuses `create_page` and the same attachment upload
+pipeline, accepting at most twenty files per call. Space update and deletion require
+the same settings-management CASL ability as the native Docmost endpoints.
 
 ## Upstream mount points
 
@@ -98,7 +114,7 @@ Server business logic is isolated under `apps/server/src/integrations/mcp/`.
 1. Sign in and create a personal API key. Copy it before closing the dialog.
 2. Configure an MCP client with the Docmost public URL ending in `/mcp` and the
    key as its Bearer token.
-3. Confirm `tools/list` returns exactly the fourteen tools above.
+3. Confirm `tools/list` returns exactly the twenty tools above.
 4. Call `get_current_user`; confirm it returns the key owner and current workspace.
 5. Test page, child-page, space and attachment queries against accessible content.
 6. Create a restricted page and an inaccessible space; confirm neither is returned

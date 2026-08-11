@@ -4,6 +4,7 @@ jest.mock('./mcp-write.service', () => ({ McpWriteService: class {} }));
 jest.mock('./mcp-attachment.service', () => ({
   McpAttachmentService: class {},
 }));
+jest.mock('./mcp-mutation.service', () => ({ McpMutationService: class {} }));
 import { McpServerFactory } from './mcp-server.factory';
 
 describe('McpServerFactory', () => {
@@ -45,9 +46,20 @@ describe('McpServerFactory', () => {
       movePage: jest.fn(),
       createComment: jest.fn(),
     } as any;
-    const server = new McpServerFactory(reads, attachments, writes).create(
-      principal,
-    );
+    const mutations = {
+      updateSpace: jest.fn(),
+      deleteSpace: jest.fn(),
+      listPageAttachments: jest.fn(),
+      deleteAttachment: jest.fn(),
+      replaceAttachment: jest.fn(),
+      createPageWithAttachments: jest.fn(),
+    } as any;
+    const server = new McpServerFactory(
+      reads,
+      attachments,
+      writes,
+      mutations,
+    ).create(principal);
     const client = new Client({ name: 'test', version: '1.0.0' });
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
@@ -60,25 +72,34 @@ describe('McpServerFactory', () => {
     expect(tools.tools.map((tool) => tool.name).sort()).toEqual([
       'create_comment',
       'create_page',
+      'create_page_with_attachments',
+      'delete_attachment',
+      'delete_space',
       'download_attachment',
       'get_attachment',
       'get_current_user',
       'get_page',
       'get_space',
       'list_child_pages',
+      'list_page_attachments',
       'list_pages',
       'list_spaces',
       'move_page',
+      'replace_attachment',
       'search_attachments',
       'search_pages',
       'update_page',
+      'update_space',
     ]);
     expect(
       tools.tools.filter((tool) => tool.annotations?.readOnlyHint),
-    ).toHaveLength(10);
+    ).toHaveLength(11);
     expect(
       tools.tools.filter((tool) => !tool.annotations?.readOnlyHint),
-    ).toHaveLength(4);
+    ).toHaveLength(9);
+    expect(
+      tools.tools.filter((tool) => tool.annotations?.destructiveHint),
+    ).toHaveLength(2);
 
     const response = await client.callTool({
       name: 'get_current_user',

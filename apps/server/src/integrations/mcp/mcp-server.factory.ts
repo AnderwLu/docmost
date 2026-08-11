@@ -5,6 +5,7 @@ import { McpPrincipal } from './mcp-api-key.service';
 import { McpReadService } from './mcp-read.service';
 import { McpAttachmentService } from './mcp-attachment.service';
 import { McpWriteService } from './mcp-write.service';
+import { McpMutationService } from './mcp-mutation.service';
 
 const readOnly = {
   readOnlyHint: true,
@@ -16,6 +17,11 @@ const writeOperation = {
   destructiveHint: false,
   idempotentHint: false,
 };
+const destructiveOperation = {
+  readOnlyHint: false,
+  destructiveHint: true,
+  idempotentHint: false,
+};
 const limit = z.number().int().min(1).max(100).default(25);
 
 @Injectable()
@@ -24,10 +30,11 @@ export class McpServerFactory {
     private readonly reads: McpReadService,
     private readonly attachments: McpAttachmentService,
     private readonly writes: McpWriteService,
+    private readonly mutations: McpMutationService,
   ) {}
 
   create(principal: McpPrincipal) {
-    const server = new McpServer({ name: 'docmost-oem', version: '1.0.0' });
+    const server = new McpServer({ name: 'docmost-oem', version: '1.2.0' });
     const result = (value: unknown) => ({
       content: [
         { type: 'text' as const, text: JSON.stringify(value, null, 2) },
@@ -216,6 +223,93 @@ export class McpServerFactory {
       },
       async (input) =>
         result(await this.writes.createComment(principal, input)),
+    );
+    server.registerTool(
+      'update_space',
+      {
+        description:
+          'Update the name and/or description of a manageable space.',
+        inputSchema: {
+          spaceId: z.string().uuid(),
+          name: z.string().trim().min(1).max(500).optional(),
+          description: z.string().max(10_000).optional(),
+        },
+        annotations: writeOperation,
+      },
+      async (input) =>
+        result(await this.mutations.updateSpace(principal, input)),
+    );
+    server.registerTool(
+      'delete_space',
+      {
+        description: 'Permanently delete a manageable Docmost space.',
+        inputSchema: { spaceId: z.string().uuid() },
+        annotations: destructiveOperation,
+      },
+      async ({ spaceId }) =>
+        result(await this.mutations.deleteSpace(principal, spaceId)),
+    );
+    server.registerTool(
+      'list_page_attachments',
+      {
+        description: 'List all attachments on a readable page.',
+        inputSchema: { pageId: z.string().uuid() },
+        annotations: readOnly,
+      },
+      async ({ pageId }) =>
+        result(await this.mutations.listPageAttachments(principal, pageId)),
+    );
+    server.registerTool(
+      'delete_attachment',
+      {
+        description: 'Permanently delete an attachment from an editable page.',
+        inputSchema: { attachmentId: z.string().uuid() },
+        annotations: destructiveOperation,
+      },
+      async ({ attachmentId }) =>
+        result(await this.mutations.deleteAttachment(principal, attachmentId)),
+    );
+    const encodedFile = {
+      fileName: z.string().trim().min(1).max(255),
+      contentBase64: z.string().min(1).max(140_000_000),
+    };
+    server.registerTool(
+      'replace_attachment',
+      {
+        description:
+          'Replace attachment bytes while preserving its ID, page relationship and download URL.',
+        inputSchema: {
+          attachmentId: z.string().uuid(),
+          ...encodedFile,
+        },
+        annotations: writeOperation,
+      },
+      async ({ attachmentId, fileName, contentBase64 }) =>
+        result(
+          await this.mutations.replaceAttachment(principal, attachmentId, {
+            fileName,
+            contentBase64,
+          }),
+        ),
+    );
+    server.registerTool(
+      'create_page_with_attachments',
+      {
+        description:
+          'Create a Markdown page and upload zero or more base64-encoded attachments.',
+        inputSchema: {
+          spaceId: z.string().uuid(),
+          title: z.string().max(500).optional(),
+          parentPageId: z.string().uuid().optional(),
+          content: z.string().max(1_000_000).optional(),
+          attachments: z.array(z.object(encodedFile)).max(20).optional(),
+        },
+        annotations: writeOperation,
+      },
+      async (input) =>
+        result(
+          await this.mutations.createPageWithAttachments(principal, input),
+        ),
     );
     return server;
   }
