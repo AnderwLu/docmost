@@ -22,7 +22,7 @@ import { EnvironmentService } from '../environment/environment.service';
 import { getMimeType, sanitizeFileName } from '../../common/helpers';
 import { Readable } from 'stream';
 import bytes from 'bytes';
-import path from 'path';
+import * as path from 'path';
 import { v7 as uuid7 } from 'uuid';
 import { McpPrincipal } from './mcp-api-key.service';
 import { McpWriteService } from './mcp-write.service';
