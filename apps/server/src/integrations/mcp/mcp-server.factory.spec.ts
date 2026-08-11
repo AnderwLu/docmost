@@ -114,4 +114,55 @@ describe('McpServerFactory', () => {
     await client.close();
     await server.close();
   });
+
+  it('serializes bigint attachment sizes in text and structured output', async () => {
+    const reads = { getCurrentUser: jest.fn() } as any;
+    const attachments = {} as any;
+    const writes = {} as any;
+    const mutations = {
+      uploadAttachment: jest.fn().mockResolvedValue({
+        id: '0198a000-0000-7000-8000-000000000001',
+        fileName: 'cases.xlsx',
+        fileSize: 42n,
+      }),
+    } as any;
+    const server = new McpServerFactory(
+      reads,
+      attachments,
+      writes,
+      mutations,
+    ).create(principal);
+    const client = new Client({ name: 'test', version: '1.0.0' });
+    const [clientTransport, serverTransport] =
+      InMemoryTransport.createLinkedPair();
+    await Promise.all([
+      server.connect(serverTransport),
+      client.connect(clientTransport),
+    ]);
+
+    const response = await client.callTool({
+      name: 'upload_attachment',
+      arguments: {
+        pageId: '0198a000-0000-7000-8000-000000000002',
+        fileName: 'cases.xlsx',
+        contentBase64: 'eA==',
+      },
+    });
+    expect(response.isError).not.toBe(true);
+    expect(response.structuredContent).toEqual({
+      result: {
+        id: '0198a000-0000-7000-8000-000000000001',
+        fileName: 'cases.xlsx',
+        fileSize: 42,
+      },
+    });
+    expect(response.content).toEqual([
+      {
+        type: 'text',
+        text: expect.stringContaining('"fileSize": 42'),
+      },
+    ]);
+    await client.close();
+    await server.close();
+  });
 });

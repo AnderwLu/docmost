@@ -38,6 +38,18 @@ import { McpWriteService } from './mcp-write.service';
 
 type EncodedFile = { fileName: string; contentBase64: string };
 
+type AttachmentDto = {
+  id: string;
+  fileName: string;
+  fileExt: string;
+  mimeType: string | null;
+  fileSize: number;
+  pageId: string | null;
+  spaceId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 @Injectable()
 export class McpMutationService {
   constructor(
@@ -105,7 +117,7 @@ export class McpMutationService {
 
   async listPageAttachments(principal: McpPrincipal, pageId: string) {
     const page = await this.requireEditablePage(principal, pageId, false);
-    return this.db
+    const attachments = await this.db
       .selectFrom('attachments')
       .select([
         'id',
@@ -123,6 +135,7 @@ export class McpMutationService {
       .where('deletedAt', 'is', null)
       .orderBy('createdAt', 'asc')
       .execute();
+    return attachments.map((attachment) => this.toAttachmentDto(attachment));
   }
 
   async deleteAttachment(principal: McpPrincipal, attachmentId: string) {
@@ -173,7 +186,7 @@ export class McpMutationService {
       throw error;
     }
     await this.storage.delete(backupPath).catch(() => undefined);
-    return updated;
+    return this.toAttachmentDto(updated);
   }
 
   async uploadAttachment(
@@ -194,7 +207,7 @@ export class McpMutationService {
     };
     await this.attachmentService.uploadToDrive(filePath, prepared.buffer);
     try {
-      return await this.attachmentService.saveAttachment({
+      const attachment = await this.attachmentService.saveAttachment({
         attachmentId,
         preparedFile,
         filePath,
@@ -204,6 +217,7 @@ export class McpMutationService {
         pageId: page.id,
         spaceId: page.spaceId,
       });
+      return this.toAttachmentDto(attachment);
     } catch (error) {
       await this.storage.delete(filePath).catch(() => undefined);
       throw error;
@@ -239,6 +253,30 @@ export class McpMutationService {
     if (limit && buffer.length > limit)
       throw new BadRequestException('File exceeds the upload-size limit');
     return { fileName, buffer };
+  }
+
+  private toAttachmentDto(attachment: {
+    id: string;
+    fileName: string;
+    fileExt: string;
+    mimeType: string | null;
+    fileSize: bigint | number | string | null;
+    pageId: string | null;
+    spaceId: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+  }): AttachmentDto {
+    return {
+      id: attachment.id,
+      fileName: attachment.fileName,
+      fileExt: attachment.fileExt,
+      mimeType: attachment.mimeType,
+      fileSize: Number(attachment.fileSize ?? 0),
+      pageId: attachment.pageId,
+      spaceId: attachment.spaceId,
+      createdAt: attachment.createdAt,
+      updatedAt: attachment.updatedAt,
+    };
   }
 
   private async requireEditablePage(

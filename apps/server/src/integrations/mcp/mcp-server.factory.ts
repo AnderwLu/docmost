@@ -24,6 +24,17 @@ const destructiveOperation = {
 };
 const limit = z.number().int().min(1).max(100).default(25);
 
+export const toMcpJsonValue = (value: unknown): unknown => {
+  if (typeof value === 'bigint') return Number(value);
+  if (Array.isArray(value)) return value.map(toMcpJsonValue);
+  if (value instanceof Date) return value.toISOString();
+  if (value && typeof value === 'object')
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [key, toMcpJsonValue(item)]),
+    );
+  return value;
+};
+
 @Injectable()
 export class McpServerFactory {
   constructor(
@@ -34,13 +45,16 @@ export class McpServerFactory {
   ) {}
 
   create(principal: McpPrincipal) {
-    const server = new McpServer({ name: 'docmost-oem', version: '1.3.1' });
-    const result = (value: unknown) => ({
-      content: [
-        { type: 'text' as const, text: JSON.stringify(value, null, 2) },
-      ],
-      structuredContent: { result: value },
-    });
+    const server = new McpServer({ name: 'docmost-oem', version: '1.3.2' });
+    const result = (value: unknown) => {
+      const jsonValue = toMcpJsonValue(value);
+      return {
+        content: [
+          { type: 'text' as const, text: JSON.stringify(jsonValue, null, 2) },
+        ],
+        structuredContent: { result: jsonValue },
+      };
+    };
 
     server.registerTool(
       'search_pages',
