@@ -13,8 +13,10 @@ isolated integration.
 | Official upstream commit | `4132dd59be05a507dad76d1e01c48c9af2fd90f0` |
 | OEM development branch   | `onlyoffice-integration`                   |
 
-MCP release `mcp-v1.3.4` is pending deployment documentation. Its immutable production
-image is `anderwlu/docmost-onlyoffice:mcp-v1.3.4`.
+MCP release `mcp-v1.3.4` is commit
+`d3c97918227bdc4298e594fcef7d98b521982a8f`. Its immutable production image is
+`anderwlu/docmost-onlyoffice:mcp-v1.3.4` with image ID
+`sha256:3ef9e3cc7b9384bf74dac45d2be1d7baac03a67c95a7cac27d7bcebc26f4b2b0`.
 The preceding read-only release is tagged `mcp-readonly-v1.0.0` at commit
 `0366245e445d4f12846f8da056c0767c38b52819`.
 
@@ -24,7 +26,7 @@ The preceding read-only release is tagged `mcp-readonly-v1.0.0` at commit
 - Only the `docmost` service was recreated with `--no-deps`.
 - PostgreSQL, Redis and ONLYOFFICE were not restarted.
 - Pre-deployment rollback data is stored at
-  `/vol1/1000/docker/docmost/backups/mcp-v1.3.4-<timestamp>` on the deployment
+  `/vol1/1000/docker/docmost/backups/mcp-v1.3.4-20260811-152130` on the deployment
   host. The PostgreSQL dump is compressed as `docmost.sql.gz`.
 - The previous image `anderwlu/docmost-onlyoffice:mcp-v1.3.3` remains
   the immediate rollback target.
