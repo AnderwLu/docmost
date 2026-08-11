@@ -10,7 +10,7 @@
 
 - Docmost 已通过 Docker 部署在飞牛服务器。
 - 当前集成基于 Docmost 官方 `v0.95.0`，上游完整提交为 `4132dd59be05a507dad76d1e01c48c9af2fd90f0`；长期基线分支为不绑定版本号的 `docmost-upstream-baseline`。每次升级 Docmost 时必须在同一变更中同步更新本条记录和 `integrations/onlyoffice/README.md` 的 “Upstream baseline” 表。
-- 当前生产 OEM 镜像为 `anderwlu/docmost-onlyoffice:0.95.0-b6617c44`，对应 OEM 提交 `b6617c44a26c65d1ec00414bbc34b4ff2736f173`。
+- 当前生产 OEM 镜像为 `anderwlu/docmost-onlyoffice:0.95.0-mcp-0366245e`，对应 MCP 发布提交 `0366245e445d4f12846f8da056c0767c38b52819`；只读 MCP 第一版标签为 `mcp-readonly-v1.0.0`。
 - ONLYOFFICE Document Server 已部署并可用。
 - 系统仅在内网使用，现阶段基本为单人使用。
 - 用户要求点击附件后在新标签页打开 ONLYOFFICE。

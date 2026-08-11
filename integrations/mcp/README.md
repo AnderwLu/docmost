@@ -12,6 +12,20 @@ already pinned by Docmost and is intentionally limited to read-only tools.
 | Official upstream commit | `4132dd59be05a507dad76d1e01c48c9af2fd90f0` |
 | OEM development branch   | `onlyoffice-integration`                   |
 
+MCP release `mcp-readonly-v1.0.0` is commit
+`0366245e445d4f12846f8da056c0767c38b52819`. The production image is
+`anderwlu/docmost-onlyoffice:0.95.0-mcp-0366245e`.
+
+## Production deployment
+
+- Deployed on `2026-08-11` to the existing Docmost Compose project.
+- Only the `docmost` service was recreated with `--no-deps`.
+- PostgreSQL, Redis and ONLYOFFICE were not restarted.
+- Pre-deployment rollback data is stored at
+  `/vol1/1000/docker/docmost/backups/mcp-20260811-102036` on the deployment host.
+- The previous image `anderwlu/docmost-onlyoffice:0.95.0-b6617c44` remains the
+  immediate rollback target.
+
 ## Endpoint and authentication
 
 - Streamable HTTP endpoint: `POST /mcp`
