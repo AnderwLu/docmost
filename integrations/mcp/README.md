@@ -2,7 +2,8 @@
 
 This OEM integration makes Docmost a Model Context Protocol server without using
 the unbundled Docmost Enterprise MCP implementation. It uses the public MCP SDK
-already pinned by Docmost and is intentionally limited to read-only tools.
+already pinned by Docmost and keeps all attachment and write behavior inside the
+isolated integration.
 
 ## Upstream baseline
 
@@ -39,7 +40,7 @@ MCP release `mcp-readonly-v1.0.0` is commit
 No additional environment variables or business tables are introduced. The
 upstream `api_keys` migration is reused.
 
-## First-release tools
+## Tools
 
 - `search_pages`
 - `get_page`
@@ -48,12 +49,30 @@ upstream `api_keys` migration is reused.
 - `get_space`
 - `list_spaces`
 - `search_attachments`
+- `get_attachment`
+- `download_attachment`
 - `get_current_user`
+- `create_page`
+- `update_page`
+- `move_page`
+- `create_comment`
 
-All tools carry the MCP read-only annotation. Page results are restricted to
-spaces available through direct or group membership and are filtered again using
-Docmost's inherited page-permission implementation. Attachment results use the
-same space and parent-page checks. Deleted records and other workspaces are excluded.
+The ten read tools carry the MCP read-only annotation. The four write tools are
+explicitly annotated as non-read-only and non-idempotent. All page and attachment
+operations enforce space membership and Docmost's inherited page permissions.
+Deleted records and other workspaces are excluded.
+
+`get_attachment` reads through Docmost's storage abstraction. It uses existing
+indexed text when present and otherwise extracts text from XLSX, DOCX, PPTX and
+common text files. XLSX output preserves worksheet, row and cell structure as
+tab-separated text. Parsing is bounded to 25 MiB and returned text to 1,000,000
+characters. `download_attachment` generates the existing Docmost signed attachment
+URL only after permission validation; the URL expires after one hour.
+
+Write tools reuse `PageService`, `CommentService`, page-access validation and
+space CASL abilities. Page content uses Markdown. `update_page` supports `replace`,
+`append` and `prepend`; `move_page` supports reparenting, moving to root and moving
+to another writable space.
 
 ## Upstream mount points
 
@@ -71,7 +90,7 @@ Server business logic is isolated under `apps/server/src/integrations/mcp/`.
 1. Sign in and create a personal API key. Copy it before closing the dialog.
 2. Configure an MCP client with the Docmost public URL ending in `/mcp` and the
    key as its Bearer token.
-3. Confirm `tools/list` returns exactly the eight tools above.
+3. Confirm `tools/list` returns exactly the fourteen tools above.
 4. Call `get_current_user`; confirm it returns the key owner and current workspace.
 5. Test page, child-page, space and attachment queries against accessible content.
 6. Create a restricted page and an inaccessible space; confirm neither is returned

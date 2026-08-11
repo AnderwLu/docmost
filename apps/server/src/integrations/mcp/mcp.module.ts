@@ -5,11 +5,21 @@ import { McpApiKeyController } from './mcp-api-key.controller';
 import { McpApiKeyService } from './mcp-api-key.service';
 import { McpReadService } from './mcp-read.service';
 import { McpServerFactory } from './mcp-server.factory';
+import { McpAttachmentService } from './mcp-attachment.service';
+import { McpWriteService } from './mcp-write.service';
+import { PageModule } from '../../core/page/page.module';
+import { CommentModule } from '../../core/comment/comment.module';
 
 @Module({
-  imports: [TokenModule],
+  imports: [TokenModule, PageModule, CommentModule],
   controllers: [McpController, McpApiKeyController],
-  providers: [McpApiKeyService, McpReadService, McpServerFactory],
+  providers: [
+    McpApiKeyService,
+    McpReadService,
+    McpAttachmentService,
+    McpWriteService,
+    McpServerFactory,
+  ],
   exports: [McpApiKeyService],
 })
 export class McpModule {}

@@ -3,17 +3,28 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod/v4';
 import { McpPrincipal } from './mcp-api-key.service';
 import { McpReadService } from './mcp-read.service';
+import { McpAttachmentService } from './mcp-attachment.service';
+import { McpWriteService } from './mcp-write.service';
 
 const readOnly = {
   readOnlyHint: true,
   destructiveHint: false,
   idempotentHint: true,
 };
+const writeOperation = {
+  readOnlyHint: false,
+  destructiveHint: false,
+  idempotentHint: false,
+};
 const limit = z.number().int().min(1).max(100).default(25);
 
 @Injectable()
 export class McpServerFactory {
-  constructor(private readonly reads: McpReadService) {}
+  constructor(
+    private readonly reads: McpReadService,
+    private readonly attachments: McpAttachmentService,
+    private readonly writes: McpWriteService,
+  ) {}
 
   create(principal: McpPrincipal) {
     const server = new McpServer({ name: 'docmost-oem', version: '1.0.0' });
@@ -99,6 +110,46 @@ export class McpServerFactory {
         result(await this.reads.searchAttachments(principal, query, limit)),
     );
     server.registerTool(
+      'get_attachment',
+      {
+        description:
+          'Read attachment metadata and extracted text. XLSX output preserves sheets, rows and cells as tab-separated text.',
+        inputSchema: { attachmentId: z.string().uuid() },
+        annotations: readOnly,
+      },
+      async ({ attachmentId }) =>
+        result(await this.attachments.getAttachment(principal, attachmentId)),
+    );
+    server.registerTool(
+      'download_attachment',
+      {
+        description:
+          'Create a one-hour signed download URL for an attachment the current user can read.',
+        inputSchema: { attachmentId: z.string().uuid() },
+        annotations: readOnly,
+      },
+      async ({ attachmentId }) => {
+        const download = await this.attachments.downloadAttachment(
+          principal,
+          attachmentId,
+        );
+        return {
+          content: [
+            { type: 'text' as const, text: JSON.stringify(download, null, 2) },
+            {
+              type: 'resource_link' as const,
+              uri: download.url,
+              name: download.fileName,
+              mimeType: download.mimeType,
+              description:
+                'Signed Docmost attachment download; expires in one hour.',
+            },
+          ],
+          structuredContent: { result: download },
+        };
+      },
+    );
+    server.registerTool(
       'get_current_user',
       {
         description:
@@ -106,6 +157,65 @@ export class McpServerFactory {
         annotations: readOnly,
       },
       async () => result(this.reads.getCurrentUser(principal)),
+    );
+    server.registerTool(
+      'create_page',
+      {
+        description: 'Create a Docmost page using Markdown content.',
+        inputSchema: {
+          spaceId: z.string().uuid(),
+          title: z.string().max(500).optional(),
+          parentPageId: z.string().uuid().optional(),
+          content: z.string().max(1_000_000).optional(),
+        },
+        annotations: writeOperation,
+      },
+      async (input) => result(await this.writes.createPage(principal, input)),
+    );
+    server.registerTool(
+      'update_page',
+      {
+        description:
+          'Update a page title and/or Markdown content. Content can replace, append or prepend.',
+        inputSchema: {
+          pageId: z.string().uuid(),
+          title: z.string().max(500).optional(),
+          content: z.string().max(1_000_000).optional(),
+          operation: z
+            .enum(['append', 'prepend', 'replace'])
+            .default('replace'),
+        },
+        annotations: writeOperation,
+      },
+      async (input) => result(await this.writes.updatePage(principal, input)),
+    );
+    server.registerTool(
+      'move_page',
+      {
+        description:
+          'Move a page below a parent, to the root, or to another writable space.',
+        inputSchema: {
+          pageId: z.string().uuid(),
+          parentPageId: z.string().uuid().nullable().optional(),
+          targetSpaceId: z.string().uuid().optional(),
+        },
+        annotations: writeOperation,
+      },
+      async (input) => result(await this.writes.movePage(principal, input)),
+    );
+    server.registerTool(
+      'create_comment',
+      {
+        description: 'Create a page comment or reply using plain text.',
+        inputSchema: {
+          pageId: z.string().uuid(),
+          text: z.string().trim().min(1).max(100_000),
+          parentCommentId: z.string().uuid().optional(),
+        },
+        annotations: writeOperation,
+      },
+      async (input) =>
+        result(await this.writes.createComment(principal, input)),
     );
     return server;
   }

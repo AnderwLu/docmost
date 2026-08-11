@@ -77,7 +77,13 @@ export default function McpSettings() {
             </List.Item>
             <List.Item>
               <Text size="sm" c="dimmed" span>
-                search_attachments, get_current_user
+                search_attachments, get_attachment, download_attachment,
+                get_current_user
+              </Text>
+            </List.Item>
+            <List.Item>
+              <Text size="sm" c="dimmed" span>
+                create_page, update_page, move_page, create_comment
               </Text>
             </List.Item>
           </List>
