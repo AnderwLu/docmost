@@ -25,10 +25,14 @@ import { AttachmentService } from '../../core/attachment/services/attachment.ser
 import { StorageService } from '../storage/storage.service';
 import { EnvironmentService } from '../environment/environment.service';
 import { getMimeType, sanitizeFileName } from '../../common/helpers';
-import { Readable } from 'stream';
 import bytes from 'bytes';
 import * as path from 'path';
 import { v7 as uuid7 } from 'uuid';
+import {
+  getAttachmentFolderPath,
+  PreparedFile,
+} from '../../core/attachment/attachment.utils';
+import { AttachmentType } from '../../core/attachment/attachment.constants';
 import { McpPrincipal } from './mcp-api-key.service';
 import { McpWriteService } from './mcp-write.service';
 
@@ -179,24 +183,31 @@ export class McpMutationService {
   ) {
     const page = await this.requireEditablePage(principal, pageId, true);
     const prepared = this.decode(file);
-    const multipart = {
-      filename: prepared.fileName,
-      mimetype: getMimeType(prepared.fileName),
-      encoding: '7bit',
-      file: Readable.from(prepared.buffer),
-      fields: {},
-      type: 'file',
-      toBuffer: async () => prepared.buffer,
-    } as any;
-    const attachment = await this.attachmentService.uploadFile({
-      filePromise: Promise.resolve(multipart),
-      pageId: page.id,
-      spaceId: page.spaceId,
-      userId: principal.user.id,
-      workspaceId: principal.workspace.id,
-    });
-    if (!attachment) throw new BadRequestException('Attachment upload failed');
-    return attachment;
+    const attachmentId = uuid7();
+    const filePath = `${getAttachmentFolderPath(AttachmentType.File, principal.workspace.id)}/${attachmentId}/${prepared.fileName}`;
+    const preparedFile: PreparedFile = {
+      buffer: prepared.buffer,
+      fileName: prepared.fileName,
+      fileSize: prepared.buffer.length,
+      fileExtension: path.extname(prepared.fileName).toLowerCase(),
+      mimeType: getMimeType(prepared.fileName),
+    };
+    await this.attachmentService.uploadToDrive(filePath, prepared.buffer);
+    try {
+      return await this.attachmentService.saveAttachment({
+        attachmentId,
+        preparedFile,
+        filePath,
+        type: AttachmentType.File,
+        userId: principal.user.id,
+        workspaceId: principal.workspace.id,
+        pageId: page.id,
+        spaceId: page.spaceId,
+      });
+    } catch (error) {
+      await this.storage.delete(filePath).catch(() => undefined);
+      throw error;
+    }
   }
 
   async createPageWithAttachments(
