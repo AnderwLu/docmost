@@ -25,7 +25,7 @@ import { AttachmentService } from '../../core/attachment/services/attachment.ser
 import { StorageService } from '../storage/storage.service';
 import { EnvironmentService } from '../environment/environment.service';
 import { getMimeType, sanitizeFileName } from '../../common/helpers';
-import bytes from 'bytes';
+import * as bytes from 'bytes';
 import * as path from 'path';
 import { v7 as uuid7 } from 'uuid';
 import {
