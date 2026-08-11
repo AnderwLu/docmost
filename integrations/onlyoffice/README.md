@@ -4,14 +4,14 @@ This customization adds authenticated online editing for Docmost `.docx`, `.xlsx
 
 ## Upstream baseline
 
-| Item | Current value |
-| --- | --- |
-| Official Docmost release | `v0.95.0` |
-| Official upstream commit | `4132dd59be05a507dad76d1e01c48c9af2fd90f0` |
-| Long-lived baseline branch | `docmost-upstream-baseline` |
-| Baseline branch head | `3dc85bd99fe1337cd9f8ecd0a45463563fde9c9b` |
-| Current OEM image | `anderwlu/docmost-onlyoffice:mcp-v1.3.3` |
-| Current OEM commit | `mcp-v1.3.3` tag |
+| Item                       | Current value                              |
+| -------------------------- | ------------------------------------------ |
+| Official Docmost release   | `v0.95.0`                                  |
+| Official upstream commit   | `4132dd59be05a507dad76d1e01c48c9af2fd90f0` |
+| Long-lived baseline branch | `docmost-upstream-baseline`                |
+| Baseline branch head       | `3dc85bd99fe1337cd9f8ecd0a45463563fde9c9b` |
+| Current OEM image          | `anderwlu/docmost-onlyoffice:mcp-v1.3.4`   |
+| Current OEM commit         | `mcp-v1.3.4` tag                           |
 
 The branch name is intentionally version-independent. After every official Docmost upgrade, update this table and the matching confirmed fact in `Docmost-ONLYOFFICE集成需求开发规格.md` in the same change that adapts the integration. Do not leave an old release or commit recorded after an upgrade.
 

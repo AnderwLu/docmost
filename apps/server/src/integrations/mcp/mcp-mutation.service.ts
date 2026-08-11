@@ -279,7 +279,7 @@ export class McpMutationService {
     };
     await this.writes.updatePage(principal, {
       pageId: page.id,
-      content: node,
+      content: this.asProsemirrorDoc(node),
       operation: 'append',
       format: 'json',
     });
@@ -310,11 +310,15 @@ export class McpMutationService {
     };
     await this.writes.updatePage(principal, {
       pageId: page.id,
-      content: node,
+      content: this.asProsemirrorDoc(node),
       operation: 'append',
       format: 'json',
     });
     return { pageId: page.id, attachment: this.toAttachmentDto(attachment) };
+  }
+
+  private asProsemirrorDoc(node: object) {
+    return { type: 'doc', content: [node] };
   }
 
   private decode(file: EncodedFile) {

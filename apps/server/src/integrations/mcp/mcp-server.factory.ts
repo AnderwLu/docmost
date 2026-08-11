@@ -45,7 +45,7 @@ export class McpServerFactory {
   ) {}
 
   create(principal: McpPrincipal) {
-    const server = new McpServer({ name: 'docmost-oem', version: '1.3.3' });
+    const server = new McpServer({ name: 'docmost-oem', version: '1.3.4' });
     const result = (value: unknown) => {
       const jsonValue = toMcpJsonValue(value);
       return {

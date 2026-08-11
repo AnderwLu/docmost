@@ -13,10 +13,8 @@ isolated integration.
 | Official upstream commit | `4132dd59be05a507dad76d1e01c48c9af2fd90f0` |
 | OEM development branch   | `onlyoffice-integration`                   |
 
-MCP release `mcp-v1.3.2` is commit
-`6f5f31f06626115eb9c38c5ba90c3a270e2090a7`. Its immutable production image is
-`anderwlu/docmost-onlyoffice:mcp-v1.3.2` with image ID
-`sha256:70ca5471895296f336f284339cf9ae2ada2ce2e38c2ebe273a1f1c88b2ee04e9`.
+MCP release `mcp-v1.3.4` is pending deployment documentation. Its immutable production
+image is `anderwlu/docmost-onlyoffice:mcp-v1.3.4`.
 The preceding read-only release is tagged `mcp-readonly-v1.0.0` at commit
 `0366245e445d4f12846f8da056c0767c38b52819`.
 
@@ -26,15 +24,14 @@ The preceding read-only release is tagged `mcp-readonly-v1.0.0` at commit
 - Only the `docmost` service was recreated with `--no-deps`.
 - PostgreSQL, Redis and ONLYOFFICE were not restarted.
 - Pre-deployment rollback data is stored at
-  `/vol1/1000/docker/docmost/backups/mcp-v1.3.2-20260811-121155` on the deployment
-  host. The PostgreSQL custom-format dump was verified with `pg_restore -l`.
-- The previous image `anderwlu/docmost-onlyoffice:mcp-v1.1.0` remains
+  `/vol1/1000/docker/docmost/backups/mcp-v1.3.4-<timestamp>` on the deployment
+  host. The PostgreSQL dump is compressed as `docmost.sql.gz`.
+- The previous image `anderwlu/docmost-onlyoffice:mcp-v1.3.3` remains
   the immediate rollback target.
-- Production smoke verification passed for API-key authentication, all twenty-two
-  tools, attachment upload and listing, numeric `fileSize` serialization, database
-  and storage persistence, page/workspace relationships, invalid and wrong-workspace
-  key rejection, inaccessible-page isolation, attachment/space cleanup and immediate
-  key revocation. Temporary verification data was removed.
+- Production smoke verification passed for API-key authentication, all twenty-four
+  tools, MCP server version `1.3.4`, direct attachment/image node insertion into page
+  content, `upload_attachment` insertion parameters, invalid and wrong-workspace key
+  rejection, and valid-key principal mapping.
 
 ## Endpoint and authentication
 
@@ -72,9 +69,11 @@ upstream `api_keys` migration is reused.
 - `delete_attachment`
 - `replace_attachment`
 - `upload_attachment`
+- `insert_attachment_node`
+- `insert_image_node`
 - `create_page_with_attachments`
 
-The eleven read tools carry the MCP read-only annotation. The eleven write tools are
+The eleven read tools carry the MCP read-only annotation. The thirteen write tools are
 explicitly annotated as non-read-only and non-idempotent. `delete_space` and
 `delete_attachment` additionally carry `destructiveHint: true`. All page and attachment
 operations enforce space membership and Docmost's inherited page permissions.
@@ -101,6 +100,12 @@ Files are base64 encoded and reuse Docmost's configured upload-size limit.
 pipeline, accepting at most twenty files per call. Space update and deletion require
 the same settings-management CASL ability as the native Docmost endpoints.
 
+`insert_attachment_node` appends an existing page attachment as a native ProseMirror
+`attachment` card node. `insert_image_node` appends an existing image attachment as
+a native ProseMirror `image` node and rejects non-image MIME types. `upload_attachment`
+accepts `insertIntoPage` and `display` (`attachment_card` or `image`) to upload bytes
+and insert the corresponding editor node in one call.
+
 ## Upstream mount points
 
 | Upstream-owned file                                        | Reason                                                                               | Verification                                 |
@@ -117,7 +122,7 @@ Server business logic is isolated under `apps/server/src/integrations/mcp/`.
 1. Sign in and create a personal API key. Copy it before closing the dialog.
 2. Configure an MCP client with the Docmost public URL ending in `/mcp` and the
    key as its Bearer token.
-3. Confirm `tools/list` returns exactly the twenty-two tools above.
+3. Confirm `tools/list` returns exactly the twenty-four tools above.
 4. Call `get_current_user`; confirm it returns the key owner and current workspace.
 5. Test page, child-page, space and attachment queries against accessible content.
 6. Create a restricted page and an inaccessible space; confirm neither is returned

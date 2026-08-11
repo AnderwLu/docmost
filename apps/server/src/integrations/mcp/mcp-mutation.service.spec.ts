@@ -132,7 +132,10 @@ describe('McpMutationService', () => {
         pageId: page.id,
         operation: 'append',
         format: 'json',
-        content: expect.objectContaining({ type: 'attachment' }),
+        content: expect.objectContaining({
+          type: 'doc',
+          content: [expect.objectContaining({ type: 'attachment' })],
+        }),
       }),
     );
   });
@@ -194,14 +197,19 @@ describe('McpMutationService', () => {
         operation: 'append',
         format: 'json',
         content: {
-          type: 'attachment',
-          attrs: {
-            url: `/api/files/${attachment.id}/${attachment.fileName}`,
-            name: attachment.fileName,
-            size: 123,
-            mime: attachment.mimeType,
-            attachmentId: attachment.id,
-          },
+          type: 'doc',
+          content: [
+            {
+              type: 'attachment',
+              attrs: {
+                url: `/api/files/${attachment.id}/${attachment.fileName}`,
+                name: attachment.fileName,
+                size: 123,
+                mime: attachment.mimeType,
+                attachmentId: attachment.id,
+              },
+            },
+          ],
         },
       }),
     );
@@ -213,14 +221,19 @@ describe('McpMutationService', () => {
         operation: 'append',
         format: 'json',
         content: {
-          type: 'image',
-          attrs: {
-            src: `/api/files/${attachment.id}/${attachment.fileName}`,
-            alt: attachment.fileName,
-            align: 'center',
-            attachmentId: attachment.id,
-            size: 123,
-          },
+          type: 'doc',
+          content: [
+            {
+              type: 'image',
+              attrs: {
+                src: `/api/files/${attachment.id}/${attachment.fileName}`,
+                alt: attachment.fileName,
+                align: 'center',
+                attachmentId: attachment.id,
+                size: 123,
+              },
+            },
+          ],
         },
       }),
     );
