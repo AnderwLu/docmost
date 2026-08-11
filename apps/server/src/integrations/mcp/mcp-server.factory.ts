@@ -34,7 +34,7 @@ export class McpServerFactory {
   ) {}
 
   create(principal: McpPrincipal) {
-    const server = new McpServer({ name: 'docmost-oem', version: '1.2.1' });
+    const server = new McpServer({ name: 'docmost-oem', version: '1.3.0' });
     const result = (value: unknown) => ({
       content: [
         { type: 'text' as const, text: JSON.stringify(value, null, 2) },
@@ -240,6 +240,25 @@ export class McpServerFactory {
         result(await this.mutations.updateSpace(principal, input)),
     );
     server.registerTool(
+      'create_space',
+      {
+        description:
+          'Create a Docmost space and add the API-key owner as administrator.',
+        inputSchema: {
+          name: z.string().trim().min(2).max(100),
+          slug: z
+            .string()
+            .min(2)
+            .max(100)
+            .regex(/^[a-zA-Z0-9][a-zA-Z0-9_-]*$/),
+          description: z.string().max(10_000).optional(),
+        },
+        annotations: writeOperation,
+      },
+      async (input) =>
+        result(await this.mutations.createSpace(principal, input)),
+    );
+    server.registerTool(
       'delete_space',
       {
         description: 'Permanently delete a manageable Docmost space.',
@@ -287,6 +306,24 @@ export class McpServerFactory {
       async ({ attachmentId, fileName, contentBase64 }) =>
         result(
           await this.mutations.replaceAttachment(principal, attachmentId, {
+            fileName,
+            contentBase64,
+          }),
+        ),
+    );
+    server.registerTool(
+      'upload_attachment',
+      {
+        description: 'Upload a base64-encoded file to an editable page.',
+        inputSchema: {
+          pageId: z.string().uuid(),
+          ...encodedFile,
+        },
+        annotations: writeOperation,
+      },
+      async ({ pageId, fileName, contentBase64 }) =>
+        result(
+          await this.mutations.uploadAttachment(principal, pageId, {
             fileName,
             contentBase64,
           }),

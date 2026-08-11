@@ -90,12 +90,12 @@ export default function McpSettings() {
             </List.Item>
             <List.Item>
               <Text size="sm" c="dimmed" span>
-                update_space, delete_space, list_page_attachments
+                create_space, update_space, delete_space, list_page_attachments
               </Text>
             </List.Item>
             <List.Item>
               <Text size="sm" c="dimmed" span>
-                delete_attachment, replace_attachment,
+                upload_attachment, delete_attachment, replace_attachment,
                 create_page_with_attachments
               </Text>
             </List.Item>

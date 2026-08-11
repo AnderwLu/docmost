@@ -47,12 +47,14 @@ describe('McpServerFactory', () => {
       createComment: jest.fn(),
     } as any;
     const mutations = {
+      createSpace: jest.fn(),
       updateSpace: jest.fn(),
       deleteSpace: jest.fn(),
       listPageAttachments: jest.fn(),
       deleteAttachment: jest.fn(),
       replaceAttachment: jest.fn(),
       createPageWithAttachments: jest.fn(),
+      uploadAttachment: jest.fn(),
     } as any;
     const server = new McpServerFactory(
       reads,
@@ -73,6 +75,7 @@ describe('McpServerFactory', () => {
       'create_comment',
       'create_page',
       'create_page_with_attachments',
+      'create_space',
       'delete_attachment',
       'delete_space',
       'download_attachment',
@@ -90,13 +93,14 @@ describe('McpServerFactory', () => {
       'search_pages',
       'update_page',
       'update_space',
+      'upload_attachment',
     ]);
     expect(
       tools.tools.filter((tool) => tool.annotations?.readOnlyHint),
     ).toHaveLength(11);
     expect(
       tools.tools.filter((tool) => !tool.annotations?.readOnlyHint),
-    ).toHaveLength(9);
+    ).toHaveLength(11);
     expect(
       tools.tools.filter((tool) => tool.annotations?.destructiveHint),
     ).toHaveLength(2);

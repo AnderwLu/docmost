@@ -11,10 +11,15 @@ import { PageRepo } from '@docmost/db/repos/page/page.repo';
 import { SpaceService } from '../../core/space/services/space.service';
 import { UpdateSpaceDto } from '../../core/space/dto/update-space.dto';
 import SpaceAbilityFactory from '../../core/casl/abilities/space-ability.factory';
+import WorkspaceAbilityFactory from '../../core/casl/abilities/workspace-ability.factory';
 import {
   SpaceCaslAction,
   SpaceCaslSubject,
 } from '../../core/casl/interfaces/space-ability.type';
+import {
+  WorkspaceCaslAction,
+  WorkspaceCaslSubject,
+} from '../../core/casl/interfaces/workspace-ability.type';
 import { PageAccessService } from '../../core/page/page-access/page-access.service';
 import { AttachmentService } from '../../core/attachment/services/attachment.service';
 import { StorageService } from '../storage/storage.service';
@@ -37,12 +42,30 @@ export class McpMutationService {
     private readonly pages: PageRepo,
     private readonly spaces: SpaceService,
     private readonly spaceAbility: SpaceAbilityFactory,
+    private readonly workspaceAbility: WorkspaceAbilityFactory,
     private readonly pageAccess: PageAccessService,
     private readonly attachmentService: AttachmentService,
     private readonly storage: StorageService,
     private readonly environment: EnvironmentService,
     private readonly writes: McpWriteService,
   ) {}
+
+  async createSpace(
+    principal: McpPrincipal,
+    input: { name: string; slug: string; description?: string },
+  ) {
+    const ability = this.workspaceAbility.createForUser(
+      principal.user,
+      principal.workspace,
+    );
+    if (ability.cannot(WorkspaceCaslAction.Manage, WorkspaceCaslSubject.Space))
+      throw new ForbiddenException();
+    return this.spaces.createSpace(
+      principal.user,
+      principal.workspace.id,
+      input,
+    );
+  }
 
   private async manageSpace(principal: McpPrincipal, spaceId: string) {
     const ability = await this.spaceAbility.createForUser(

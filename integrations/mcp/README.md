@@ -64,14 +64,16 @@ upstream `api_keys` migration is reused.
 - `update_page`
 - `move_page`
 - `create_comment`
+- `create_space`
 - `update_space`
 - `delete_space`
 - `list_page_attachments`
 - `delete_attachment`
 - `replace_attachment`
+- `upload_attachment`
 - `create_page_with_attachments`
 
-The eleven read tools carry the MCP read-only annotation. The nine write tools are
+The eleven read tools carry the MCP read-only annotation. The eleven write tools are
 explicitly annotated as non-read-only and non-idempotent. `delete_space` and
 `delete_attachment` additionally carry `destructiveHint: true`. All page and attachment
 operations enforce space membership and Docmost's inherited page permissions.
@@ -114,7 +116,7 @@ Server business logic is isolated under `apps/server/src/integrations/mcp/`.
 1. Sign in and create a personal API key. Copy it before closing the dialog.
 2. Configure an MCP client with the Docmost public URL ending in `/mcp` and the
    key as its Bearer token.
-3. Confirm `tools/list` returns exactly the twenty tools above.
+3. Confirm `tools/list` returns exactly the twenty-two tools above.
 4. Call `get_current_user`; confirm it returns the key owner and current workspace.
 5. Test page, child-page, space and attachment queries against accessible content.
 6. Create a restricted page and an inaccessible space; confirm neither is returned
