@@ -9,7 +9,7 @@ import { PageAccessService } from '../../core/page/page-access/page-access.servi
 import { StorageService } from '../storage/storage.service';
 import { TokenService } from '../../core/auth/services/token.service';
 import { EnvironmentService } from '../environment/environment.service';
-import { McpPrincipal } from './mcp-api-key.service';
+import { McpPrincipal } from './mcp-principal';
 import * as JSZip from 'jszip';
 import * as cheerio from 'cheerio';
 

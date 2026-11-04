@@ -1,8 +1,13 @@
 import { Module } from '@nestjs/common';
+// Attachment download URLs still use Docmost's signed file tokens.
 import { TokenModule } from '../../core/auth/token.module';
 import { McpController } from './mcp.controller';
-import { McpApiKeyController } from './mcp-api-key.controller';
-import { McpApiKeyService } from './mcp-api-key.service';
+import {
+  OAuthProtocolController,
+  OAuthAccountController,
+} from './oauth/oauth.controller';
+import { OAuthService } from './oauth/oauth.service';
+import { OAuthStore } from './oauth/oauth.store';
 import { McpReadService } from './mcp-read.service';
 import { McpServerFactory } from './mcp-server.factory';
 import { McpAttachmentService } from './mcp-attachment.service';
@@ -21,15 +26,15 @@ import { CommentModule } from '../../core/comment/comment.module';
     SpaceModule,
     AttachmentModule,
   ],
-  controllers: [McpController, McpApiKeyController],
+  controllers: [McpController, OAuthProtocolController, OAuthAccountController],
   providers: [
-    McpApiKeyService,
+    OAuthService,
+    OAuthStore,
     McpReadService,
     McpAttachmentService,
     McpWriteService,
     McpMutationService,
     McpServerFactory,
   ],
-  exports: [McpApiKeyService],
 })
 export class McpModule {}

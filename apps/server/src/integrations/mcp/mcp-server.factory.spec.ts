@@ -16,7 +16,7 @@ describe('McpServerFactory', () => {
       role: 'member',
     },
     workspace: { id: 'workspace-1', name: 'Docs' },
-    apiKeyId: 'key-1',
+    oauthGrantId: 'grant-1',
   } as any;
 
   it('exposes the attachment and page tools with accurate annotations', async () => {

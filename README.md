@@ -42,10 +42,11 @@ configuration, storage behavior, mount points, smoke tests, and rollback notes.
 
 ### Model Context Protocol server
 
-This fork also exposes Docmost as an MCP server at `POST /mcp`, authenticated by
-personal API keys created in Docmost.
+This fork also exposes Docmost as an MCP server at `POST /mcp`, authenticated through
+OAuth browser authorization using the existing Docmost knowledge-base account.
+The current NAS version no longer accepts personal API keys at `/mcp`.
 
-Current MCP release: `mcp-v1.3.4`
+Current NAS MCP release: `mcp-v1.4.0-oauth-20261104`
 
 Supported MCP capabilities include:
 
@@ -69,13 +70,18 @@ list, annotations, authentication model, deployment record, and smoke test.
 
 ## Custom image
 
-The deployed v1.3.4 image built from this fork is:
+The current NAS uses the locally built `anderwlu/docmost-onlyoffice:mcp-v1.4.0-oauth-20261104`.
+Its source snapshot, checksums and rollback instructions are recorded in
+[integrations/mcp/README.md](integrations/mcp/README.md). This image has not been
+pushed to a registry.
+
+The preceding published v1.3.4 image is:
 
 ```text
 andrew988/docmost-onlyoffice:mcp-v1.3.4
 ```
 
-Its source tag in this repository is:
+That preceding release's source tag in this repository is:
 
 ```text
 mcp-v1.3.4

@@ -14,7 +14,7 @@ import {
   SpaceCaslSubject,
 } from '../../core/casl/interfaces/space-ability.type';
 import { CommentService } from '../../core/comment/comment.service';
-import { McpPrincipal } from './mcp-api-key.service';
+import { McpPrincipal } from './mcp-principal';
 
 @Injectable()
 export class McpWriteService {

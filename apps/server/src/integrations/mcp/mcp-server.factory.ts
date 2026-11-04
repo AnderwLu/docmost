@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod/v4';
-import { McpPrincipal } from './mcp-api-key.service';
+import { McpPrincipal } from './mcp-principal';
 import { McpReadService } from './mcp-read.service';
 import { McpAttachmentService } from './mcp-attachment.service';
 import { McpWriteService } from './mcp-write.service';
@@ -45,7 +45,7 @@ export class McpServerFactory {
   ) {}
 
   create(principal: McpPrincipal) {
-    const server = new McpServer({ name: 'docmost-oem', version: '1.3.4' });
+    const server = new McpServer({ name: 'docmost-oem', version: '1.4.0' });
     const result = (value: unknown) => {
       const jsonValue = toMcpJsonValue(value);
       return {
@@ -174,7 +174,7 @@ export class McpServerFactory {
       'get_current_user',
       {
         description:
-          'Get the Docmost user and workspace represented by this API key.',
+          'Get the Docmost user and workspace represented by this OAuth authorization.',
         annotations: readOnly,
       },
       async () => result(this.reads.getCurrentUser(principal)),

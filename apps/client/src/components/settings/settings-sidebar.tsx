@@ -27,7 +27,6 @@ import { Feature } from "@/ee/features";
 import { useUpgradeLabel } from "@/ee/hooks/use-upgrade-label";
 import {
   prefetchApiKeyManagement,
-  prefetchApiKeys,
   prefetchBilling,
   prefetchGroups,
   prefetchLicense,
@@ -69,7 +68,8 @@ const groupedData: DataGroup[] = [
         path: "/settings/account/preferences",
       },
       {
-        label: "API keys",
+        // OEM mount: manage OAuth grants for the existing knowledge-base account.
+        label: "MCP 授权连接",
         icon: IconKey,
         path: "/settings/account/api-keys",
       },
@@ -211,9 +211,6 @@ export default function SettingsSidebar() {
               break;
             case "Public sharing":
               prefetchHandler = prefetchShares;
-              break;
-            case "API keys":
-              prefetchHandler = prefetchApiKeys;
               break;
             case "API management":
               prefetchHandler = prefetchApiKeyManagement;

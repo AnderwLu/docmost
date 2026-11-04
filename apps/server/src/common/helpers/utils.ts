@@ -164,8 +164,11 @@ export function isUserDisabled(user: {
   return !!(user.deactivatedAt || user.deletedAt);
 }
 
-const SENSITIVE_URL_PREFIXES = ['/api/sso/'];
+// OEM security mount: OAuth state, PKCE and codes must never enter HTTP logs.
+const SENSITIVE_URL_PREFIXES = ['/api/sso/', '/oauth/', '/mcp/authorize/'];
 const SENSITIVE_PATH_TOKEN_PREFIXES = [
+  '/api/mcp-oauth/requests/',
+  '/mcp/authorize/',
   '/api/office/files/',
   '/api/office/callback/',
 ];

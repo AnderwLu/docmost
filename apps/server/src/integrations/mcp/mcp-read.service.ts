@@ -4,7 +4,7 @@ import { sql } from 'kysely';
 import { KyselyDB } from '@docmost/db/types/kysely.types';
 import { SpaceMemberRepo } from '@docmost/db/repos/space/space-member.repo';
 import { PagePermissionRepo } from '@docmost/db/repos/page/page-permission.repo';
-import { McpPrincipal } from './mcp-api-key.service';
+import { McpPrincipal } from './mcp-principal';
 import { validate as isUuid } from 'uuid';
 
 @Injectable()

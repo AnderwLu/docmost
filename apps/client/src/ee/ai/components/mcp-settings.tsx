@@ -58,7 +58,7 @@ export default function McpSettings() {
         </Group>
         <Text size="sm" c="dimmed" mt="xs">
           {t(
-            "Use your API key for authentication. You can manage API keys in your account settings.",
+            "Connect using OAuth and sign in with your existing Docmost account. Manage authorized connections in your account settings.",
           )}
         </Text>
 

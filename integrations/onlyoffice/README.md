@@ -10,8 +10,8 @@ This customization adds authenticated online editing for Docmost `.docx`, `.xlsx
 | Official upstream commit   | `4132dd59be05a507dad76d1e01c48c9af2fd90f0` |
 | Long-lived baseline branch | `docmost-upstream-baseline`                |
 | Baseline branch head       | `3dc85bd99fe1337cd9f8ecd0a45463563fde9c9b` |
-| Current OEM image          | `anderwlu/docmost-onlyoffice:mcp-v1.3.4`   |
-| Current OEM commit         | `mcp-v1.3.4` tag                           |
+| Current OEM image          | `anderwlu/docmost-onlyoffice:mcp-v1.4.0-oauth-20261104`   |
+| Current OEM source         | Git tag `mcp-v1.4.0`; deployed snapshot/image distinction: see MCP README |
 
 The branch name is intentionally version-independent. After every official Docmost upgrade, update this table and the matching confirmed fact in `Docmost-ONLYOFFICE集成需求开发规格.md` in the same change that adapts the integration. Do not leave an old release or commit recorded after an upgrade.
 
@@ -100,3 +100,15 @@ The override assumes the existing ONLYOFFICE service is reachable at the configu
 7. Build the custom image and run the smoke test against a disposable database and attachment volume/bucket.
 8. Back up production data, deploy the new immutable image tag, and verify all three formats.
 9. On failure, redeploy the previous image tag while preserving the database and attachment volume/bucket. Restore data only if a database/storage migration explicitly requires it.
+
+## MCP OAuth shared mount points (2026-11-04)
+
+This change does not modify ONLYOFFICE storage, save handling or upload limits.
+The shared upstream mounts added for MCP OAuth are documented in
+[the MCP integration README](../mcp/README.md#upstream-mount-points): `apps/server/src/main.ts`
+(OAuth discovery routes/CORS), `apps/server/src/common/helpers/utils.ts`
+(OAuth URL redaction), `apps/client/src/App.tsx` (consent route),
+`apps/client/src/components/settings/settings-sidebar.tsx` (connection management),
+`apps/client/src/ee/api-key/pages/user-api-keys.tsx` (management mount), and
+`apps/client/src/ee/ai/components/mcp-settings.tsx` (connection instructions).
+Verify these with the MCP OAuth HTTP/Redis tests, frontend tests, typechecks and builds.

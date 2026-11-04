@@ -14,6 +14,7 @@ import fastifyIp from 'fastify-ip';
 import { InternalLogFilter } from './common/logger/internal-log-filter';
 import { EnvironmentService } from './integrations/environment/environment.service';
 import { resolveFrameHeader } from './common/helpers';
+import { OAUTH_PUBLIC_ROUTES } from './integrations/mcp/oauth/oauth.http';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -39,7 +40,13 @@ async function bootstrap() {
   app.useLogger(app.get(PinoLogger));
 
   app.setGlobalPrefix('api', {
-    exclude: ['robots.txt', 'share/:shareId/p/:pageSlug', 'mcp'],
+    // OEM mount: OAuth discovery and protocol endpoints live outside /api.
+    exclude: [
+      'robots.txt',
+      'share/:shareId/p/:pageSlug',
+      'mcp',
+      ...OAUTH_PUBLIC_ROUTES,
+    ],
   });
 
   const reflector = app.get(Reflector);
@@ -141,7 +148,9 @@ async function bootstrap() {
     }),
   );
 
-  app.enableCors();
+  // OEM mount: allow MCP clients to read the OAuth discovery challenge.
+  // Nest Fastify already parses standard form-encoded token requests.
+  app.enableCors({ exposedHeaders: ['WWW-Authenticate'] });
   app.useGlobalInterceptors(new TransformHttpResponseInterceptor(reflector));
   app.enableShutdownHooks();
 

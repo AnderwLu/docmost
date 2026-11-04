@@ -33,7 +33,7 @@ import {
   PreparedFile,
 } from '../../core/attachment/attachment.utils';
 import { AttachmentType } from '../../core/attachment/attachment.constants';
-import { McpPrincipal } from './mcp-api-key.service';
+import { McpPrincipal } from './mcp-principal';
 import { McpWriteService } from './mcp-write.service';
 
 type EncodedFile = { fileName: string; contentBase64: string };

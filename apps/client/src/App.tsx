@@ -50,6 +50,9 @@ import LabelPage from "@/pages/label/label-page";
 // OEM 挂载点：独立编辑页由 ONLYOFFICE 集成目录维护，避免业务逻辑进入官方路由文件。
 import OnlyOfficeEditorPage from "@/integrations/onlyoffice/onlyoffice-editor-page";
 
+// OEM mount: OAuth consent uses the existing login and return-path flow.
+import McpAuthorizationPage from "@/integrations/mcp/mcp-authorization-page";
+
 export default function App() {
   const { t } = useTranslation();
   useRedirectToCloudSelect();
@@ -59,6 +62,10 @@ export default function App() {
     <>
       <Routes>
         <Route index element={<Navigate to="/home" />} />
+        <Route
+          path="/mcp/authorize/:requestId"
+          element={<McpAuthorizationPage />}
+        />
         <Route path={"/login"} element={<LoginPage />} />
         <Route path={"/invites/:invitationId"} element={<InviteSignup />} />
         <Route path={"/forgot-password"} element={<ForgotPassword />} />
