@@ -21,8 +21,6 @@ import {
 } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 import { getSpaceUrl } from "@/lib/config.ts";
-import { useHasFeature } from "@/ee/hooks/use-feature";
-import { Feature } from "@/ee/features";
 import { usePersonalSpaceQuery } from "@/ee/personal-space/queries/personal-space-query";
 import CreatePersonalSpaceModal from "@/ee/personal-space/components/create-personal-space-modal";
 import { useAtom } from "jotai";
@@ -43,9 +41,8 @@ export default function TopMenu() {
   const user = currentUser?.user;
   const workspace = currentUser?.workspace;
 
-  const hasPersonalSpaces = useHasFeature(Feature.PERSONAL_SPACES);
   const settingEnabled = workspace?.settings?.spaces?.allowPersonal === true;
-  const { data: personalSpace } = usePersonalSpaceQuery(hasPersonalSpaces);
+  const { data: personalSpace } = usePersonalSpaceQuery(true);
   const [
     createOpened,
     { open: openCreate, close: closeCreate },
@@ -140,7 +137,6 @@ export default function TopMenu() {
             {t("Personal space")}
           </Menu.Item>
         ) : (
-          hasPersonalSpaces &&
           settingEnabled && (
             <Menu.Item
               onClick={openCreate}

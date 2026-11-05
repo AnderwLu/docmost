@@ -333,8 +333,7 @@ export class WorkspaceService {
       typeof updateWorkspaceDto.mcpEnabled !== 'undefined' ||
       typeof updateWorkspaceDto.restrictApiToAdmins !== 'undefined' ||
       typeof updateWorkspaceDto.allowMemberTemplates !== 'undefined' ||
-      typeof updateWorkspaceDto.isScimEnabled !== 'undefined' ||
-      typeof updateWorkspaceDto.allowPersonalSpaces !== 'undefined'
+      typeof updateWorkspaceDto.isScimEnabled !== 'undefined'
     ) {
       const ws = await this.db
         .selectFrom('workspaces')
@@ -359,18 +358,6 @@ export class WorkspaceService {
           throw new ForbiddenException(
             'This feature requires a valid license',
           );
-        }
-      }
-
-      if (typeof updateWorkspaceDto.allowPersonalSpaces !== 'undefined') {
-        if (
-          !this.licenseCheckService.hasFeature(
-            ws.licenseKey,
-            Feature.PERSONAL_SPACES,
-            ws.plan,
-          )
-        ) {
-          throw new ForbiddenException('This feature requires a valid license');
         }
       }
 

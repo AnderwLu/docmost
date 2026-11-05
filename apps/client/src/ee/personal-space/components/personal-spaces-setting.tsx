@@ -5,9 +5,6 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { updateWorkspace } from "@/features/workspace/services/workspace-service.ts";
 import { notifications } from "@mantine/notifications";
-import { useHasFeature } from "@/ee/hooks/use-feature";
-import { Feature } from "@/ee/features";
-import { useUpgradeLabel } from "@/ee/hooks/use-upgrade-label.ts";
 
 export default function PersonalSpacesSetting() {
   const { t } = useTranslation();
@@ -32,9 +29,6 @@ function PersonalSpacesToggle() {
   const [checked, setChecked] = useState(
     workspace?.settings?.spaces?.allowPersonal === true,
   );
-  const hasPersonalSpaces = useHasFeature(Feature.PERSONAL_SPACES);
-  const upgradeLabel = useUpgradeLabel();
-
   const handleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.currentTarget.checked;
     try {
@@ -52,11 +46,13 @@ function PersonalSpacesToggle() {
   };
 
   return (
-    <Tooltip label={upgradeLabel} disabled={hasPersonalSpaces} refProp="rootRef">
+    <Tooltip
+      label={t("Allow members to create personal spaces")}
+      refProp="rootRef"
+    >
       <Switch
         checked={checked}
         onChange={handleChange}
-        disabled={!hasPersonalSpaces}
         aria-label={t("Toggle allow personal spaces")}
       />
     </Tooltip>

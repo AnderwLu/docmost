@@ -132,6 +132,12 @@ export default function PageEditor({
   const [providersReady, setProvidersReady] = useState(false);
 
   useEffect(() => {
+    // The collaboration token is loaded independently from the page data.
+    // Do not create or attach a Hocuspocus provider until it is available;
+    // connecting with an undefined token causes the server to close the
+    // socket and leaves the editor permanently disconnected.
+    if (!collabQuery?.token) return;
+
     if (!providersRef.current) {
       const documentName = `page.${pageId}`;
       const ydoc = new Y.Doc();
@@ -206,7 +212,7 @@ export default function PageEditor({
       providersRef.current?.local.destroy();
       providersRef.current = null;
     };
-  }, [pageId]);
+  }, [pageId, collabQuery?.token]);
 
   // Only connect/disconnect on tab/idle, not destroy
   useEffect(() => {
