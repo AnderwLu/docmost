@@ -11,3 +11,10 @@ services:
       ONLYOFFICE_JWT_SECRET: ${ONLYOFFICE_JWT_SECRET:?set ONLYOFFICE_JWT_SECRET}
       ONLYOFFICE_TOKEN_SECRET: ${ONLYOFFICE_TOKEN_SECRET:?set ONLYOFFICE_TOKEN_SECRET}
       ONLYOFFICE_TOKEN_TTL_SECONDS: ${ONLYOFFICE_TOKEN_TTL_SECONDS:-1800}
+    networks:
+      - default
+      - nextcloud-office-frontend
+
+networks:
+  nextcloud-office-frontend:
+    external: true

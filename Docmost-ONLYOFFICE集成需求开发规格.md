@@ -13,6 +13,7 @@
 - 当前生产 OEM 镜像于 2026-11-04 更新为 `anderwlu/docmost-onlyoffice:mcp-v1.4.0-oauth-20261104`，镜像 ID 为 `sha256:b427b99506329c38445f936c14cbdab7e8989a61ba9894ce1da15b88c4563fb4`；发布源码为基准提交 `cdba3f3209cfebc04803d1a8996df8fc23df264d` 加 OAuth 工作区改动，已在 NAS 发布目录保存完整源码快照及校验清单；最终源码固定为 Git 标签 `mcp-v1.4.0`（包括默认关闭的可选诊断及最终发布文档，生产继续使用已验证镜像）；只读 MCP 第一版标签为 `mcp-readonly-v1.0.0`。
 - 当前生产 Docmost 与 MCP 统一使用 `https://doc.lujianning.cn`（MCP 路径 `/mcp`）；OAuth 发行者、资源和全部授权端点已于 2026-11-04 同步切换，新域名 IPv4 与 IPv6 均验证可用。
 - ONLYOFFICE Document Server 已部署并可用。
+- 当前生产 ONLYOFFICE Document Server 已升级并固定为 `9.4.0`，镜像 digest 为 `sha256:e3da62a847b9a5d51a11f73cfea1d9c13c3be3809614490d4edddcf01dcf919b`；浏览器访问必须经 HTTPS 域名反向代理，不得使用 `http://192.168.100.7:5671`。
 - 系统仅在内网使用，现阶段基本为单人使用。
 - 用户要求点击附件后在新标签页打开 ONLYOFFICE。
 - 用户要求能够编辑并保存回 Docmost。

@@ -2,6 +2,9 @@
 
 This customization adds authenticated online editing for Docmost `.docx`, `.xlsx`, and `.pptx` attachments.
 
+The production Document Server is pinned to ONLYOFFICE `9.4.0` with digest
+`sha256:e3da62a847b9a5d51a11f73cfea1d9c13c3be3809614490d4edddcf01dcf919b`.
+
 ## Upstream baseline
 
 | Item                       | Current value                              |
@@ -25,6 +28,19 @@ The branch name is intentionally version-independent. After every official Docmo
 | `ONLYOFFICE_JWT_SECRET`        | Shared Document Server JWT secret. Configure the same value in ONLYOFFICE.                                                                        |
 | `ONLYOFFICE_TOKEN_SECRET`      | Independent secret for short-lived file and callback URLs. Use at least 32 random bytes and do not reuse `APP_SECRET`.                            |
 | `ONLYOFFICE_TOKEN_TTL_SECONDS` | Signed URL lifetime; defaults to 1800 seconds.                                                                                                    |
+
+`ONLYOFFICE_BROWSER_URL` must be an HTTPS reverse-proxy origin reachable by
+the user's browser. Do not expose the Document Server's plain HTTP container
+port or a private IP as the browser origin. `ONLYOFFICE_INTERNAL_URL` and
+`ONLYOFFICE_DOCMOST_URL` may remain Docker-network origins when they are only
+used for server-to-server traffic.
+
+The production reverse proxy uses `https://doc.lujianning.cn` for both
+Docmost and ONLYOFFICE. ONLYOFFICE resource/version paths, `/web-apps/`,
+`/coauthoring/`, `/cache/`, and `/sdkjs/` are proxied to the Document Server;
+the remaining `/` routes continue to proxy to Docmost. The Docmost service
+must join the external `nextcloud-office-frontend` Docker network so its
+internal origin can resolve the `onlyoffice` service alias.
 
 All URL variables are normalized to origins. Paths, embedded credentials, redirects, and edited-file origins other than `ONLYOFFICE_INTERNAL_URL` are rejected.
 
